@@ -1,0 +1,36 @@
+{
+  "name": "react-amap-editor",
+  "version": "1.0.0",
+  "description": "A React component for AMap(高德地图) editing",
+  "main": "dist/index.umd.js",
+  "module": "dist/index.es.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "cd example && npm run dev",
+    "build": "npm run build:lib",
+    "build:lib": "tsc && vite build --config vite.lib.config.js",
+    "prepublishOnly": "npm run build:lib"
+  },
+  "dependencies": {
+    "@amap/amap-jsapi-loader": "^1.0.1",
+    "@turf/turf": "^7.2.0",
+    "mitt": "^3.0.1"
+  },
+  "devDependencies": {
+    "@amap/amap-jsapi-types": "^0.0.15",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^4.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "typescript": "^5.2.2",
+    "vite": "^5.0.0"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0"
+  }
+}
