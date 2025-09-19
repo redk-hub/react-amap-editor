@@ -8,12 +8,7 @@ export interface AMapEditorProps {
   className?: string;
   style?: React.CSSProperties;
   amapKey: string;
-  mode?: DrawMode;
-  onDrawEnd?: (feature: any) => void;
-  onSelect?: (feature: any) => void;
-  onDelete?: (feature: any, allFeatures: any[]) => void;
-  toolbarPosition?: React.CSSProperties;
-  modeButtonsPosition?: React.CSSProperties;
+  onSelect?: (ids: Id[], features: Polygon[]) => void;
 }
 
 import type {

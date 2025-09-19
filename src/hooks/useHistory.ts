@@ -1,5 +1,5 @@
 // src/hooks/useHistory.ts
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState, useEffect } from "react";
 import type {
   HistoryState,
   Id,
@@ -20,7 +20,6 @@ type StackItem = {
 };
 
 export default function useHistory<T = Polygon[]>(opt: Opts<T>) {
-  const { max = 50, update } = opt;
   const bus = useEventBus();
 
   const modifyIndex = useRef<number>(-1); // 记录当前所处的要素索引位置
@@ -33,6 +32,32 @@ export default function useHistory<T = Polygon[]>(opt: Opts<T>) {
       index: number;
     };
   }>({});
+
+  // Add effect to check for cached data on mount
+  // useEffect(() => {
+  //   try {
+  //     const cachedData = localStorage.getItem("unsaved_history");
+  //     if (cachedData) {
+  //       const shouldRestore =
+  //         window.confirm("发现未保存的编辑记录，是否恢复？");
+  //       if (shouldRestore) {
+  //         const {
+  //           index,
+  //           modifies: cachedModifies,
+  //           stacks: cachedStacks,
+  //         } = JSON.parse(cachedData);
+  //         modifyIndex.current = index;
+  //         modifies.current = cachedModifies;
+  //         stacks.current = cachedStacks;
+  //         setActionNum((num) => num + 1);
+  //       } else {
+  //         localStorage.removeItem("unsaved_history");
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed to restore cached history:", error);
+  //   }
+  // }, []);
 
   const disableUndo = useMemo(() => {
     if (modifyIndex.current < 0) {
@@ -249,7 +274,13 @@ export default function useHistory<T = Polygon[]>(opt: Opts<T>) {
     return resValues;
   };
 
-  const initial = (features: Polygon[]) => {
+  const initial = (features: Polygon[], clear: boolean) => {
+    if (clear) {
+      modifyIndex.current = -1;
+      modifies.current = [];
+      undoNumber.current = 0;
+      stacks.current = {};
+    }
     features.forEach((feature) => {
       if (!stacks.current[feature.id]) {
         addStackItem({
@@ -305,12 +336,21 @@ export default function useHistory<T = Polygon[]>(opt: Opts<T>) {
     return unSaved;
   };
 
+  const clearHistory = () => {
+    localStorage.removeItem("unsaved_history");
+    modifyIndex.current = -1;
+    modifies.current = [];
+    undoNumber.current = 0;
+    stacks.current = {};
+  };
+
   return {
     initial,
     pushHistory,
     undo,
     redo,
     getUnSavedFeatures,
+    clearHistory,
     disableUndo,
     disableRedo,
   };

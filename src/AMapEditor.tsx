@@ -37,7 +37,7 @@ const AMapEditor = forwardRef<AMapEditorRef, AMapEditorProps>((props, ref) => {
 
 const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
   (props, ref) => {
-    const { amapKey, className, style, onDrawEnd, onSelect } = props;
+    const { amapKey, className, style, onSelect } = props;
     const bus = useEventBus();
     const [polygons, setPolygons] = useState<Feature<MultiPolygon>[]>([]);
     const [selectedIds, setSelectedIds] = useState<Id[]>([]);
@@ -50,10 +50,14 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
       disableUndo,
       disableRedo,
       getUnSavedFeatures,
+      initial,
+      clearHistory,
     } = useHistory({});
 
     useImperativeHandle(ref, () => ({
       getUnSavedFeatures,
+      initial,
+      clearHistory,
     }));
 
     // Rest of the AMapEditorContent implementation
@@ -185,6 +189,16 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
       });
     };
 
+    const onSelectIds = (clickIds: Id[]) => {
+      setSelectedIds(clickIds);
+      if (onSelect) {
+        const selectedFeatures = polygons.filter((p) =>
+          clickIds.includes(p.id)
+        );
+        onSelect(clickIds, selectedFeatures);
+      }
+    };
+
     return (
       <div
         className={className}
@@ -219,7 +233,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
           pushHistory={pushHistory}
           onStartClip={onStartClip}
           selectedIds={selectedIds}
-          onSelectIds={setSelectedIds}
+          onSelectIds={onSelectIds}
         />
       </div>
     );
