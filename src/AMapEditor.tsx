@@ -140,7 +140,7 @@ const AMapEditorContent: React.FC<AMapEditorProps> = ({
       style={{ position: "relative", ...(style || {}) }}
     >
       <div className="editor-header">
-        <div style={{ color: "#fff", fontWeight: 600 }}>AMap GIS Editor</div>
+        <div className="editor-logo">AMap GIS Editor</div>
         <Toolbar
           mode={activeMode}
           onModeChange={onModeChange}
@@ -155,7 +155,7 @@ const AMapEditorContent: React.FC<AMapEditorProps> = ({
           onDelete={onDelete}
           disabledDelete={!selectedIds.length}
         />
-        <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+        <div className="editor-batch-wrap">
           <ImportButton onImport={onImport} />
         </div>
       </div>

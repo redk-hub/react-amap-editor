@@ -69,14 +69,14 @@ const Toolbar: React.FC<Props> = ({
         <IconBtn icon={<RedoIcon />} onClick={onRedo} disabled={disabledRedo} />
       </Tooltip>
 
-      <Tooltip title="合并：选中多个要素，点击合并">
+      <Tooltip title="合并：shift+鼠标左键单击选中多个要素合并">
         <IconBtn
           icon={<MergeIcon />}
           onClick={onMerge}
           disabled={disabledMerge}
         />
       </Tooltip>
-      <Tooltip title="裁切：选中要素，绘制裁切线，双击结束，开始裁切">
+      <Tooltip title="裁切：选中要素，绘制裁切线，双击结束开始裁切">
         <IconBtn
           icon={<ScissorIcon />}
           onClick={onClip}
