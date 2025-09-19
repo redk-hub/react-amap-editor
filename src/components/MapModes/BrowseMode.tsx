@@ -9,7 +9,6 @@ interface BrowseModeProps {
   polygons: Polygon[];
   selectedIds: Id[];
   onSelectIds: (ids: Id[]) => void;
-  onOpenProperty: (id: Id) => void;
   onEditPolygon?: (id: Id, coordinates: [number, number][]) => void;
 }
 
@@ -19,7 +18,6 @@ export const BrowseMode: React.FC<BrowseModeProps> = ({
   polygons,
   selectedIds,
   onSelectIds,
-  onOpenProperty,
   onEditPolygon,
 }) => {
   const editor = useRef<any>(null);

@@ -9,7 +9,6 @@ interface ClipModeProps {
   AMap: any;
   polygons: Polygon[];
   onFinish: (feature: Feature<LineString>) => void;
-  onCancel: () => void;
 }
 
 export const ClipMode: React.FC<ClipModeProps> = ({
@@ -17,7 +16,6 @@ export const ClipMode: React.FC<ClipModeProps> = ({
   AMap,
   polygons,
   onFinish,
-  onCancel,
 }) => {
   const drawing = useRef<{ active: boolean; points: Position[] }>({
     active: false,
@@ -87,7 +85,6 @@ export const ClipMode: React.FC<ClipModeProps> = ({
       tempLayer.current = [];
 
       if (pts.length < 2) {
-        onCancel();
         return;
       }
 
@@ -141,7 +138,7 @@ export const ClipMode: React.FC<ClipModeProps> = ({
         map.remove(ov);
       }
     };
-  }, [map, AMap, polygons, onFinish, onCancel]);
+  }, [map, AMap, polygons, onFinish]);
 
   return null;
 };

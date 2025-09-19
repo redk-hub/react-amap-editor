@@ -1,10 +1,9 @@
 import React, { useEffect, useRef } from "react";
 import useAmap from "@/hooks/useAmap";
 import { DrawMode, BrowseMode, ClipMode } from "../MapModes";
-import { splitMultiPolygonByLine } from "@/utils/geo";
 
 import type { Polygon, Id, ToolMode } from "@/types";
-import type { Position, LineString, Feature } from "geojson";
+import type { LineString, Feature } from "geojson";
 import type { Behave } from "@/types";
 
 const CONTAINER_ID = "amap-root";
@@ -12,25 +11,25 @@ const CONTAINER_ID = "amap-root";
 interface Props {
   amapKey: string;
   mode: ToolMode;
-  onExitMode: () => void;
   polygons: Polygon[];
-  onPolygonsChange: (next: Polygon[]) => void;
   selectedIds: Id[];
   onSelectIds: (ids: Id[]) => void;
-  onOpenProperty: (id: Id) => void;
   pushHistory: (behave: Behave) => void;
+  onDrawFinish: (feature: Polygon) => void;
+  onEditPolygon: (id: Id, coordinates: any) => void;
+  onStartClip: (line: Feature<LineString>) => void;
 }
 
 const MapContainer: React.FC<Props> = ({
   amapKey,
   mode,
-  onExitMode,
   polygons,
-  onPolygonsChange,
   selectedIds,
   onSelectIds,
-  onOpenProperty,
   pushHistory,
+  onDrawFinish,
+  onEditPolygon,
+  onStartClip,
 }) => {
   const { map, AMap } = useAmap(CONTAINER_ID, amapKey);
   const overlays = useRef<Map<Id, any>>(new Map());
@@ -123,40 +122,6 @@ const MapContainer: React.FC<Props> = ({
     };
   }, [map, AMap, mode, polygons, selectedIds, onSelectIds]);
 
-  const handleDrawFinish = (feature: Polygon) => {
-    onPolygonsChange([...polygons, feature]);
-    pushHistory({
-      annotation: `draw finish ${feature.id}`,
-      features: [feature],
-    });
-  };
-
-  const onEditPolygon = (id: string, coordinates: any) => {
-    const newPolys = polygons.map((p) =>
-      p.id === id ? { ...p, geometry: { ...p.geometry, coordinates } } : p
-    );
-    onPolygonsChange(newPolys);
-    pushHistory({
-      annotation: `edit ${id}`,
-      features: newPolys.filter((p) => p.id == id),
-    });
-  };
-
-  const onStartClip = (line: Feature<LineString>) => {
-    const feature = polygons.find((p) => selectedIds.includes(p.id));
-    if (!feature) return;
-    const polys = splitMultiPolygonByLine(feature, line);
-    const newPolys = polygons.filter((item) => item.id != feature.id);
-
-    onPolygonsChange([...newPolys, ...polys]);
-    onExitMode();
-    onSelectIds([]);
-    pushHistory({
-      annotation: `clip ${feature.id}`,
-      features: [{ ...feature, geometry: null }, ...polys],
-    });
-  };
-
   return (
     <>
       <div id={CONTAINER_ID} className="map-root" />
@@ -167,7 +132,6 @@ const MapContainer: React.FC<Props> = ({
           polygons={polygons}
           selectedIds={selectedIds}
           onSelectIds={onSelectIds}
-          onOpenProperty={onOpenProperty}
           onEditPolygon={onEditPolygon}
         />
       )}
@@ -176,8 +140,7 @@ const MapContainer: React.FC<Props> = ({
           map={map}
           AMap={AMap}
           polygons={polygons}
-          onFinish={handleDrawFinish}
-          onCancel={onExitMode}
+          onFinish={onDrawFinish}
           pushHistory={pushHistory}
         />
       )}
@@ -188,7 +151,6 @@ const MapContainer: React.FC<Props> = ({
           AMap={AMap}
           polygons={polygons}
           onFinish={onStartClip}
-          onCancel={onExitMode}
         />
       )}
     </>

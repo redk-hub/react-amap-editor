@@ -11,7 +11,6 @@ interface DrawModeProps {
   AMap: any;
   polygons: Polygon[];
   onFinish: (feature: Polygon) => void;
-  onCancel: () => void;
   pushHistory: (behave: Behave) => void;
 }
 
@@ -20,7 +19,6 @@ export const DrawMode: React.FC<DrawModeProps> = ({
   AMap,
   polygons,
   onFinish,
-  onCancel,
   pushHistory,
 }) => {
   const bus = useEventBus();
@@ -182,7 +180,6 @@ export const DrawMode: React.FC<DrawModeProps> = ({
     tempLayer.current = [];
 
     if (pts.length < 3) {
-      // onCancel();
       return;
     }
 
