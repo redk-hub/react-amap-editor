@@ -1,5 +1,5 @@
 import React from "react";
-import "../styles/index.css";
+import "@/styles/index.css";
 
 type ButtonProps = {
   type?: "primary" | "default" | "danger";
@@ -93,109 +93,5 @@ export const Upload: React.FC<UploadProps> = ({
         onChange={handleChange}
       />
     </label>
-  );
-};
-
-type FormProps = {
-  children: React.ReactNode;
-  onSubmit?: (e: React.FormEvent) => void;
-};
-
-export const Form: React.FC<FormProps> = ({ children, onSubmit }) => {
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit?.(e);
-  };
-
-  return (
-    <form className="form" onSubmit={handleSubmit}>
-      {children}
-    </form>
-  );
-};
-
-type FormItemProps = {
-  label?: string;
-  children: React.ReactNode;
-};
-
-export const FormItem: React.FC<FormItemProps> = ({ label, children }) => {
-  return (
-    <div className="form-item">
-      {label && <label>{label}</label>}
-      {children}
-    </div>
-  );
-};
-
-type InputProps = {
-  value?: string;
-  placeholder?: string;
-  onChange?: (value: string) => void;
-};
-
-export const Input: React.FC<InputProps> = ({
-  value,
-  placeholder,
-  onChange,
-}) => {
-  return (
-    <input
-      className="form-input"
-      value={value}
-      placeholder={placeholder}
-      onChange={(e) => onChange?.(e.target.value)}
-    />
-  );
-};
-
-type DrawerProps = {
-  open?: boolean;
-  title?: string;
-  onClose?: () => void;
-  children: React.ReactNode;
-  extra?: React.ReactNode;
-};
-
-export const Drawer: React.FC<DrawerProps> = ({
-  open,
-  title,
-  onClose,
-  children,
-  extra,
-}) => {
-  return (
-    <div className={`drawer${open ? " open" : ""}`}>
-      <div className="drawer-header">
-        <h3 className="drawer-title">{title}</h3>
-        {extra}
-      </div>
-      <div className="drawer-body">{children}</div>
-    </div>
-  );
-};
-
-type DescriptionsProps = {
-  children: React.ReactNode;
-};
-
-export const Descriptions: React.FC<DescriptionsProps> = ({ children }) => {
-  return <div className="descriptions">{children}</div>;
-};
-
-type DescriptionsItemProps = {
-  label: React.ReactNode;
-  children: React.ReactNode;
-};
-
-export const DescriptionsItem: React.FC<DescriptionsItemProps> = ({
-  label,
-  children,
-}) => {
-  return (
-    <div className="descriptions-row">
-      <div className="descriptions-label">{label}</div>
-      <div className="descriptions-content">{children}</div>
-    </div>
   );
 };

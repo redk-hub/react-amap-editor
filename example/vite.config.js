@@ -7,9 +7,10 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "../src"),
-    },
+      "react-amap-editor": path.resolve(__dirname, "../src")
+    }
   },
   server: {
-    open: true,
-  },
+    open: true
+  }
 });

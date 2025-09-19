@@ -9,7 +9,7 @@
     "dist"
   ],
   "scripts": {
-    "dev": "cd example && npm run dev",
+    "dev": "vite --config vite.config.js",
     "build": "npm run build:lib",
     "build:lib": "tsc && vite build --config vite.lib.config.js",
     "prepublishOnly": "npm run build:lib"

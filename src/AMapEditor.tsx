@@ -9,8 +9,10 @@ import * as turf from "@turf/turf";
 import { processPolygons } from "@/utils/geo";
 import type { Feature, MultiPolygon, Polygon } from "geojson";
 
-const AMapEditor: React.FC<AMapEditorProps> = ({
+const AMapEditorContent: React.FC<AMapEditorProps> = ({
   amapKey,
+  className,
+  style,
   onDrawEnd,
   onSelect,
   toolbarPosition,
@@ -133,8 +135,11 @@ const AMapEditor: React.FC<AMapEditorProps> = ({
   };
 
   return (
-    <EventBusProvider>
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+    <div
+      className={className}
+      style={{ position: "relative", ...(style || {}) }}
+    >
+      <div className="editor-header">
         <div style={{ color: "#fff", fontWeight: 600 }}>AMap GIS Editor</div>
         <Toolbar
           mode={activeMode}
@@ -154,21 +159,27 @@ const AMapEditor: React.FC<AMapEditorProps> = ({
           <ImportButton onImport={onImport} />
         </div>
       </div>
-      <div style={{ position: "relative" }}>
-        <MapContainer
-          amapKey={amapKey}
-          mode={activeMode}
-          polygons={polygons}
-          pushHistory={pushHistory}
-          onPolygonsChange={(next) => {
-            setPolygons(next);
-          }}
-          selectedIds={selectedIds}
-          onSelectIds={setSelectedIds}
-          onOpenProperty={(id) => setPropertyTargetId(id)}
-          onExitMode={() => setActiveMode("browse")}
-        />
-      </div>
+      <MapContainer
+        amapKey={amapKey}
+        mode={activeMode}
+        polygons={polygons}
+        pushHistory={pushHistory}
+        onPolygonsChange={(next) => {
+          setPolygons(next);
+        }}
+        selectedIds={selectedIds}
+        onSelectIds={setSelectedIds}
+        onOpenProperty={(id) => setPropertyTargetId(id)}
+        onExitMode={() => setActiveMode("browse")}
+      />
+    </div>
+  );
+};
+
+const AMapEditor: React.FC<AMapEditorProps> = (props) => {
+  return (
+    <EventBusProvider>
+      <AMapEditorContent {...props} />
     </EventBusProvider>
   );
 };

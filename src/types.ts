@@ -1,6 +1,8 @@
 export type DrawMode = "point" | "line" | "polygon" | "browse";
 
 export interface AMapEditorProps {
+  className?: string;
+  style?: React.CSSProperties;
   amapKey: string;
   mode?: DrawMode;
   onDrawEnd?: (feature: any) => void;

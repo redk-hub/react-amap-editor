@@ -2,13 +2,12 @@
 import { useEffect, useRef, useState } from "react";
 import AMapLoader from "@amap/amap-jsapi-loader";
 
-export default function useAmap(containerId: string) {
+export default function useAmap(containerId: string, key: string) {
   const [map, setMap] = useState<AMap.Map | null>(null);
   const amapRef = useRef<typeof AMap | null>(null);
 
   useEffect(() => {
     let disposed = false;
-    const key = import.meta.env.VITE_AMAP_KEY as string | undefined;
     if (!key) {
       console.warn("VITE_AMAP_KEY is not set. Map will not initialize.");
       return () => {
@@ -50,7 +49,7 @@ export default function useAmap(containerId: string) {
       if (map) map.destroy();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [containerId]);
+  }, [containerId, key]);
 
   return { map, AMap: amapRef.current };
 }

@@ -32,7 +32,7 @@ const MapContainer: React.FC<Props> = ({
   onOpenProperty,
   pushHistory,
 }) => {
-  const { map, AMap } = useAmap(amapKey);
+  const { map, AMap } = useAmap(CONTAINER_ID, amapKey);
   const overlays = useRef<Map<Id, any>>(new Map());
 
   useEffect(() => {

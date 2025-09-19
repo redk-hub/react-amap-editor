@@ -1,6 +1,6 @@
 // src/components/Toolbar/index.tsx
 import React from "react";
-import { Button, Space, Tooltip } from "antd";
+import { Button, Space, Tooltip } from "@/components/base";
 import {
   ScissorIcon,
   EditIcon,
@@ -45,7 +45,7 @@ const Toolbar: React.FC<Props> = ({
   disabledDelete,
 }) => {
   return (
-    <Space className="toolbar-group" wrap>
+    <Space wrap>
       <Tooltip
         title={
           <span>
