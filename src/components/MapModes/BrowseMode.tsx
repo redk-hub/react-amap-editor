@@ -1,13 +1,15 @@
 import React, { useEffect, useRef } from "react";
 import type { Id, Polygon } from "@/types";
+import type { Position } from "geojson";
 import * as turf from "@turf/turf";
-import { amapPathToGeoJSONCoords } from "@/utils/geo";
+import { amapPathToGeoJSONCoords, isPointInPolygon } from "@/utils/geo";
 
 interface BrowseModeProps {
   map: any;
   AMap: any;
   polygons: Polygon[];
   selectedIds: Id[];
+  boxFeature?: Polygon;
   onSelectIds: (ids: Id[]) => void;
   onEditPolygon?: (id: Id, coordinates: [number, number][]) => void;
 }
@@ -17,6 +19,7 @@ export const BrowseMode: React.FC<BrowseModeProps> = ({
   AMap,
   polygons,
   selectedIds,
+  boxFeature,
   onSelectIds,
   onEditPolygon,
 }) => {
@@ -55,12 +58,24 @@ export const BrowseMode: React.FC<BrowseModeProps> = ({
 
     const prePath = selectedPoly?.getPath();
 
+    // 监听编辑过程中的事件，检查是否超出边界
+    const handleMove = (e: any) => {
+      if (!boxFeature) return;
+      const movedPoint = [e.lnglat.lng, e.lnglat.lat];
+
+      // 检查移动的点是否在bbox内
+      if (!isPointInPolygon(movedPoint, boxFeature)) {
+        // 如果超出边界，恢复到移动前的位置
+        e.target.setPosition(e.target.get("sourcePosition"));
+      }
+    };
+
     // 监听编辑完成事件
     const handleEnd = () => {
       const newPath = selectedPoly.getPath();
-
       const newCoords = amapPathToGeoJSONCoords(newPath);
       const preCoords = amapPathToGeoJSONCoords(prePath);
+
       if (
         turf.booleanEqual(
           turf.multiPolygon(newCoords),
@@ -97,17 +112,22 @@ export const BrowseMode: React.FC<BrowseModeProps> = ({
       // 开启编辑器
       editor.current.open();
 
+      // 监听移动和编辑完成事件
+      editor.current.on("adjust", handleMove);
+      editor.current.on("addnode", handleMove);
       editor.current.on("end", handleEnd);
     }
 
     return () => {
       if (selectedPoly) {
+        editor.current.off("adjust", handleMove);
+        editor.current.off("addnode", handleMove);
+        editor.current.off("end", handleEnd);
         editor.current.close();
         editor.current = null;
-        editor.current?.off("end", handleEnd);
       }
     };
-  }, [map, selectedIds, polygons, onEditPolygon]); // polygons在撤销和重做时会变化，需要重新绑定编辑器
+  }, [map, selectedIds, polygons, onEditPolygon, boxFeature]); // 添加bbox作为依赖
 
   return null;
 };

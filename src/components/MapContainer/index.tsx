@@ -2,9 +2,8 @@ import React, { useEffect, useRef } from "react";
 import useAmap from "@/hooks/useAmap";
 import { DrawMode, BrowseMode, ClipMode } from "../MapModes";
 
-import type { Polygon, Feature, Id, ToolMode } from "@/types";
-import type { LineString } from "geojson";
-import type { Behave } from "@/types";
+import type { Polygon, Feature, Id, ToolMode, Behave } from "@/types";
+import type { LineString, Position } from "geojson";
 
 const CONTAINER_ID = "amap-root";
 
@@ -13,6 +12,7 @@ interface Props {
   mode: ToolMode;
   polygons: Polygon[];
   selectedIds: Id[];
+  boxFeature?: Polygon;
   onSelectIds: (ids: Id[]) => void;
   pushHistory: (behave: Behave) => void;
   onDrawFinish: (feature: Polygon) => void;
@@ -25,6 +25,7 @@ const MapContainer: React.FC<Props> = ({
   mode,
   polygons,
   selectedIds,
+  boxFeature,
   onSelectIds,
   pushHistory,
   onDrawFinish,
@@ -131,6 +132,7 @@ const MapContainer: React.FC<Props> = ({
           AMap={AMap}
           polygons={polygons}
           selectedIds={selectedIds}
+          boxFeature={boxFeature}
           onSelectIds={onSelectIds}
           onEditPolygon={onEditPolygon}
         />
@@ -140,6 +142,7 @@ const MapContainer: React.FC<Props> = ({
           map={map}
           AMap={AMap}
           polygons={polygons}
+          boxFeature={boxFeature}
           onFinish={onDrawFinish}
           pushHistory={pushHistory}
         />
@@ -150,6 +153,7 @@ const MapContainer: React.FC<Props> = ({
           map={map}
           AMap={AMap}
           polygons={polygons}
+          boxFeature={boxFeature}
           onFinish={onStartClip}
         />
       )}

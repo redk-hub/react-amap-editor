@@ -2,13 +2,8 @@
 
 import * as turf from "@turf/turf";
 
-import { Feature } from "../types";
-import type {
-  FeatureCollection,
-  Polygon,
-  MultiPolygon,
-  LineString,
-} from "geojson";
+import { Feature, Polygon } from "../types";
+import type { MultiPolygon, LineString, Position } from "geojson";
 
 // 高德poly.getpath转换成geojson的coords
 export function amapPathToGeoJSONCoords(path) {
@@ -157,3 +152,41 @@ export function processPolygons(polygons) {
 
   return result;
 }
+
+/**
+ * 将各种维度的坐标转换为MultiPolygon
+ */
+export function coordsToMultiPolygon(
+  coords: Position[][][] | Position[][] | Position[]
+): Feature<MultiPolygon> {
+  if (!coords?.length) return turf.multiPolygon([]) as Feature<MultiPolygon>;
+
+  if (typeof coords[0][0] === "number") {
+    return turf.multiPolygon([
+      [coords],
+    ] as Position[][][]) as Feature<MultiPolygon>;
+  }
+
+  // 处理LineString/Polygon坐标 [[lng, lat], ...]
+  if (typeof coords[0][0][0] === "number") {
+    return turf.multiPolygon([coords as Position[][]]) as Feature<MultiPolygon>;
+  }
+
+  return turf.multiPolygon(coords as Position[][][]) as Feature<MultiPolygon>;
+}
+
+/**
+ * 检查点是否在边界内
+ */
+export function isPointInPolygon(
+  point: Position,
+  boxFeature: Polygon
+): boolean {
+  if (!boxFeature) return true;
+  const pt = turf.point(point);
+  return turf.booleanPointInPolygon(pt, boxFeature);
+}
+
+/**
+ * 找到点离面最近的一条边
+ */

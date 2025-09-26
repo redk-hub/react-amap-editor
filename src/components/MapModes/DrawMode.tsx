@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { getSnap } from "@/utils/snap";
+import { isPointInPolygon } from "@/utils/geo";
 import type { Polygon, Behave, UndoOrRedoRes } from "@/types";
 import type { Position } from "geojson";
 import * as turf from "@turf/turf";
@@ -10,6 +11,7 @@ interface DrawModeProps {
   map: any;
   AMap: any;
   polygons: Polygon[];
+  boxFeature?: Polygon;
   onFinish: (feature: Polygon) => void;
   pushHistory: (behave: Behave) => void;
 }
@@ -18,6 +20,7 @@ export const DrawMode: React.FC<DrawModeProps> = ({
   map,
   AMap,
   polygons,
+  boxFeature,
   onFinish,
   pushHistory,
 }) => {
@@ -114,8 +117,11 @@ export const DrawMode: React.FC<DrawModeProps> = ({
     const pts = [...drawing.current.points];
 
     if (cur) {
-      const snap = getSnap(map, polygons, cur, snapThresholdPx);
-      const dispCur = snap ? snap.lnglat : cur;
+      const snap = !isPointInPolygon(cur, boxFeature)
+        ? getSnap(map, [boxFeature], cur, Infinity)?.lnglat
+        : getSnap(map, polygons, cur, snapThresholdPx)?.lnglat;
+
+      const dispCur = snap ? snap : cur;
       pts.push(dispCur);
     }
     if (pts.length < 2) {
@@ -144,14 +150,16 @@ export const DrawMode: React.FC<DrawModeProps> = ({
     }
   };
 
-  const addPoint = (lnglat: [number, number]) => {
+  const addPoint = (lnglat: Position) => {
     if (!drawing.current.active) {
       drawing.current.active = true;
       map.setStatus({ dragEnable: false });
     }
+    const snap = !isPointInPolygon(lnglat, boxFeature)
+      ? getSnap(map, [boxFeature], lnglat, Infinity)?.lnglat
+      : getSnap(map, polygons, lnglat, snapThresholdPx)?.lnglat;
 
-    const snap = getSnap(map, polygons, lnglat, snapThresholdPx);
-    const pt = snap ? snap.lnglat : lnglat;
+    const pt = snap ? snap : lnglat;
     drawing.current.points.push(pt);
     pushHistory({
       annotation: "draw",
@@ -180,6 +188,11 @@ export const DrawMode: React.FC<DrawModeProps> = ({
     tempLayer.current = [];
 
     if (pts.length < 3) {
+      return;
+    }
+
+    // Check if final polygon is within boxFeature
+    if (!isPointInPolygon(pts[pts.length - 1], boxFeature)) {
       return;
     }
 

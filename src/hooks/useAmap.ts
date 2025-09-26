@@ -39,6 +39,26 @@ export default function useAmap(containerId: string, key: string) {
         map.addControl(new AMapNS.Scale());
         map.addControl(new AMapNS.ToolBar());
         (window as any).map = map;
+
+        const poly: any = new AMap.Polygon();
+        poly.setOptions({
+          path: [
+            [
+              [116.716203, 40.079011],
+              [116.716203, 39.741667],
+              [116.078653, 39.741667],
+              [116.078653, 40.079011],
+              [116.716203, 40.079011],
+            ],
+          ],
+          fillOpacity: 0.3,
+          fillColor: "#1677ff",
+          strokeColor: "#1f1f1f",
+          strokeWeight: 2,
+          zIndex: 50,
+        });
+        map.add(poly);
+
         setMap(map);
       })
       .catch((err) => {

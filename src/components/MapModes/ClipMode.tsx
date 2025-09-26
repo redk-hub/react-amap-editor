@@ -8,6 +8,7 @@ interface ClipModeProps {
   map: any;
   AMap: any;
   polygons: Polygon[];
+  boxFeature?: Polygon;
   onFinish: (feature: Feature<LineString>) => void;
 }
 
@@ -15,6 +16,7 @@ export const ClipMode: React.FC<ClipModeProps> = ({
   map,
   AMap,
   polygons,
+  boxFeature,
   onFinish,
 }) => {
   const drawing = useRef<{ active: boolean; points: Position[] }>({
@@ -70,7 +72,6 @@ export const ClipMode: React.FC<ClipModeProps> = ({
       const snap = getSnap(map, polygons, lnglat, snapThresholdPx);
       const pt = snap ? snap.lnglat : lnglat;
       drawing.current.points.push(pt);
-      // pushHistory();
       drawTemp(pt);
     };
 

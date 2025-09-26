@@ -19,7 +19,7 @@ import type {
 } from "@/types";
 import useHistory from "@/hooks/useHistory";
 import * as turf from "@turf/turf";
-import { processPolygons } from "@/utils/geo";
+import { processPolygons, coordsToMultiPolygon } from "@/utils/geo";
 import type { LineString, MultiPolygon, Polygon } from "geojson";
 
 import { splitMultiPolygonByLine } from "@/utils/geo";
@@ -38,7 +38,7 @@ const AMapEditor = forwardRef<AMapEditorRef, AMapEditorProps>((props, ref) => {
 
 const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
   (props, ref) => {
-    const { amapKey, className, style, onSelect } = props;
+    const { amapKey, className, style, bbox, onSelect } = props;
     const bus = useEventBus();
     const [polygons, setPolygons] = useState<Feature<MultiPolygon>[]>([]);
     const [selectedIds, setSelectedIds] = useState<Id[]>([]);
@@ -60,6 +60,11 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
       initial,
       clearHistory,
     }));
+
+    const boxFeature = useMemo(() => {
+      if (!bbox?.length) return null;
+      return coordsToMultiPolygon(bbox);
+    }, [bbox]);
 
     // Rest of the AMapEditorContent implementation
     useEffect(() => {
@@ -236,6 +241,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
           amapKey={amapKey}
           mode={activeMode}
           polygons={polygons}
+          boxFeature={boxFeature}
           onDrawFinish={onDrawFinish}
           onEditPolygon={onEditPolygon}
           pushHistory={pushHistory}
