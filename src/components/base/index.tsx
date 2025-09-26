@@ -1,5 +1,4 @@
 import React from "react";
-import "@/styles/index.css";
 
 type ButtonProps = {
   type?: "primary" | "default" | "danger";

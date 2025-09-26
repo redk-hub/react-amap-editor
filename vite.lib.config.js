@@ -7,6 +7,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   plugins: [react()],
+  css: {
+    modules: false,
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -19,13 +22,18 @@ export default defineConfig({
       fileName: (format) => `index.${format}.js`,
       formats: ["es", "umd"],
     },
+    cssCodeSplit: false,
     sourcemap: true,
+    outDir: "dist",
     rollupOptions: {
       external: ["react", "react-dom"],
       output: {
         globals: {
           react: "React",
           "react-dom": "ReactDOM",
+        },
+        assetFileNames: (assetInfo) => {
+          return assetInfo.name === "style.css" ? "index.css" : assetInfo.name;
         },
       },
     },

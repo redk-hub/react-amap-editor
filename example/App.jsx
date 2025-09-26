@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { AMapEditor } from "react-amap-editor";
+import { AMapEditor } from "../src";
 
 const App = () => {
   const [log, setLog] = useState("");
 
   return (
-    <div style={{ width: "100vw", height: "100vh" }}>
+    <div className="app-container" style={{ width: "100vw", height: "100vh" }}>
       <AMapEditor
         amapKey="cd4c46df876318f649075037f7e27cf3"
         style={{ width: "100%", height: "100%" }}

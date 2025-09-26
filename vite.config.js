@@ -4,11 +4,17 @@ import path from "path";
 
 export default defineConfig({
   plugins: [react()],
+  css: {
+    modules: false,
+  },
   resolve: {
     alias: {
       "react-amap-editor": path.resolve(__dirname, "src"),
       "@": path.resolve(__dirname, "./src"),
     },
+  },
+  build: {
+    cssCodeSplit: false,
   },
   root: "example",
   server: {
