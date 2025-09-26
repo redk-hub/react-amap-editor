@@ -1,3 +1,16 @@
+import type {
+  Feature as TurfFeature,
+  Polygon as TurfPolygon,
+  MultiPolygon as TurfMultiPolygon,
+  Position,
+  Geometry,
+} from "geojson";
+
+// 扩展 Feature 类型，强制 id 为 string
+export type Feature<T extends Geometry> = Omit<TurfFeature<T>, "id"> & {
+  id: string;
+};
+
 export type DrawMode = "point" | "line" | "polygon" | "browse";
 
 export interface AMapEditorRef {
@@ -11,13 +24,6 @@ export interface AMapEditorProps {
   onSelect?: (ids: Id[], features: Polygon[]) => void;
 }
 
-import type {
-  Feature,
-  Polygon as TurfPolygon,
-  MultiPolygon as TurfMultiPolygon,
-  Position,
-} from "geojson";
-
 export type ToolMode = "browse" | "draw" | "clip" | "merge" | "edit";
 
 export type PolygonProperties = {
@@ -27,7 +33,7 @@ export type PolygonProperties = {
 
 export type Polygon = Feature<TurfMultiPolygon>;
 
-export type Id = string | number;
+export type Id = string;
 
 export type PolygonFeature = {
   id: string;

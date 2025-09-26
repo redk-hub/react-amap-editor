@@ -15,11 +15,12 @@ import type {
   UndoOrRedoRes,
   AMapEditorProps,
   Polygon as PolygonFeature,
+  Feature,
 } from "@/types";
 import useHistory from "@/hooks/useHistory";
 import * as turf from "@turf/turf";
 import { processPolygons } from "@/utils/geo";
-import type { Feature, LineString, MultiPolygon, Polygon } from "geojson";
+import type { LineString, MultiPolygon, Polygon } from "geojson";
 
 import { splitMultiPolygonByLine } from "@/utils/geo";
 
@@ -63,9 +64,14 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
     // Rest of the AMapEditorContent implementation
     useEffect(() => {
       const handleUndoOrRedo = (value: UndoOrRedoRes[]) => {
-        const oldVals = value.map((v) => v.oldValue).filter(Boolean);
-        const newVals = value.map((v) => v.newValue).filter(Boolean);
+        const oldVals = value
+          .map((v) => v.oldValue)
+          .filter((item) => !!item && !item.id.includes("temp"));
+        const newVals = value
+          .map((v) => v.newValue)
+          .filter((item) => !!item && !item.id.includes("temp"));
         const oldIds = new Set(oldVals.map((v) => v.id));
+        if (oldVals.length === 0 && newVals.length === 0) return;
         setPolygons((pre) => {
           const list = pre.filter((item) => !oldIds.has(item.id));
           return [...list, ...newVals];
@@ -130,11 +136,13 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
       if (selectedIds.length < 2) return;
       let selectedPolygons = polygons.filter((p) => selectedIds.includes(p.id));
       selectedPolygons = processPolygons(selectedPolygons);
-      let merged: Feature<Polygon | MultiPolygon>;
+      let merged;
       if (selectedPolygons.length == 1) {
         merged = selectedPolygons[0];
       } else {
-        merged = turf.union(turf.featureCollection(selectedPolygons));
+        merged = turf.union(
+          turf.featureCollection(selectedPolygons)
+        ) as Feature<Polygon | MultiPolygon>;
       }
 
       if (merged) {

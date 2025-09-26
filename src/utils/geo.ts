@@ -1,17 +1,9 @@
 // src/utils/geo.ts
 
-import {
-  polygonToLine,
-  lineSplit,
-  lineIntersect,
-  featureCollection,
-  multiPolygon,
-  polygon,
-} from "@turf/turf";
 import * as turf from "@turf/turf";
 
+import { Feature } from "../types";
 import type {
-  Feature,
   FeatureCollection,
   Polygon,
   MultiPolygon,

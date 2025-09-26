@@ -188,7 +188,7 @@ export const DrawMode: React.FC<DrawModeProps> = ({
       {},
       { id: drawing.current.id.split("_")[1] }
     );
-    onFinish(feature);
+    onFinish(feature as Polygon);
     drawing.current = { active: false, id: "temp_" + uuid(), points: [] };
   };
 

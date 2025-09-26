@@ -2,8 +2,8 @@ import React, { useEffect, useRef } from "react";
 import useAmap from "@/hooks/useAmap";
 import { DrawMode, BrowseMode, ClipMode } from "../MapModes";
 
-import type { Polygon, Id, ToolMode } from "@/types";
-import type { LineString, Feature } from "geojson";
+import type { Polygon, Feature, Id, ToolMode } from "@/types";
+import type { LineString } from "geojson";
 import type { Behave } from "@/types";
 
 const CONTAINER_ID = "amap-root";
