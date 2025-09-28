@@ -1,8 +1,8 @@
 export const DownloadIcon = () => (
   <svg
     viewBox="0 0 24 24"
-    width="1em"
-    height="1em"
+    width="1.5em"
+    height="1.5em"
     fill="currentColor"
     style={{ transform: "translateY(2px)" }}
   >
@@ -13,8 +13,8 @@ export const DownloadIcon = () => (
 export const ScissorIcon = () => (
   <svg
     viewBox="0 0 24 24"
-    width="1em"
-    height="1em"
+    width="1.5em"
+    height="1.5em"
     fill="currentColor"
     style={{ transform: "translateY(2px)" }}
   >
@@ -25,8 +25,8 @@ export const ScissorIcon = () => (
 export const EditIcon = () => (
   <svg
     viewBox="0 0 24 24"
-    width="1em"
-    height="1em"
+    width="1.5em"
+    height="1.5em"
     fill="currentColor"
     style={{ transform: "translateY(2px)" }}
   >
@@ -34,11 +34,24 @@ export const EditIcon = () => (
   </svg>
 );
 
+export const EditModeIcon = () => (
+  <svg
+    viewBox="0 0 24 24"
+    width="1.5em"
+    height="1.5em"
+    fill="currentColor"
+    style={{ transform: "translateY(2px)" }}
+  >
+    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+    <circle cx="12" cy="12" r="2" fill="white" />
+  </svg>
+);
+
 export const UndoIcon = () => (
   <svg
     viewBox="0 0 24 24"
-    width="1em"
-    height="1em"
+    width="1.5em"
+    height="1.5em"
     fill="currentColor"
     style={{ transform: "translateY(2px)" }}
   >
@@ -49,8 +62,8 @@ export const UndoIcon = () => (
 export const RedoIcon = () => (
   <svg
     viewBox="0 0 24 24"
-    width="1em"
-    height="1em"
+    width="1.5em"
+    height="1.5em"
     fill="currentColor"
     style={{ transform: "translateY(2px)" }}
   >
@@ -61,8 +74,8 @@ export const RedoIcon = () => (
 export const MergeIcon = () => (
   <svg
     viewBox="0 0 24 24"
-    width="1em"
-    height="1em"
+    width="1.5em"
+    height="1.5em"
     fill="currentColor"
     style={{ transform: "translateY(2px)" }}
   >
@@ -73,8 +86,8 @@ export const MergeIcon = () => (
 export const DeleteIcon = () => (
   <svg
     viewBox="0 0 24 24"
-    width="1em"
-    height="1em"
+    width="1.5em"
+    height="1.5em"
     fill="currentColor"
     style={{ transform: "translateY(2px)" }}
   >
@@ -85,11 +98,50 @@ export const DeleteIcon = () => (
 export const ShakeIcon = () => (
   <svg
     viewBox="0 0 24 24"
-    width="1em"
-    height="1em"
+    width="2em"
+    height="2em"
     fill="currentColor"
     style={{ transform: "translateY(2px)" }}
   >
-    <path d="M15.5 14.5c0-2.8 2.2-5 5-5 .36 0 .71.04 1.05.11L23.64 6H16v8l2.5-2.5L20 13.5c-1.35 0-2.5 1.15-2.5 2.5s1.15 2.5 2.5 2.5 2.5-1.15 2.5-2.5h2c0 2.48-2.02 4.5-4.5 4.5s-4.5-2.02-4.5-4.5zM4 9v2h8V9H4zm0 4v2h10v-2H4zm0 4v2h10v-2H4z" />
+    {/* 磁铁主体 */}
+    <rect x="8" y="6" width="8" height="4" rx="2" fill="currentColor" />
+    <rect x="8" y="14" width="8" height="4" rx="2" fill="currentColor" />
+
+    {/* 磁力线 */}
+    <path d="M12 10v4" stroke="currentColor" strokeWidth="1.5" fill="none" />
+    <path
+      d="M10 11l2-1 2 1"
+      stroke="currentColor"
+      strokeWidth="1"
+      fill="none"
+    />
+    <path
+      d="M10 13l2 1 2-1"
+      stroke="currentColor"
+      strokeWidth="1"
+      fill="none"
+    />
+
+    {/* 吸附效果 - 小点 */}
+    <circle cx="6" cy="8" r="1" fill="currentColor" opacity="0.6" />
+    <circle cx="18" cy="8" r="1" fill="currentColor" opacity="0.6" />
+    <circle cx="6" cy="16" r="1" fill="currentColor" opacity="0.6" />
+    <circle cx="18" cy="16" r="1" fill="currentColor" opacity="0.6" />
+
+    {/* 连接线表示吸附 */}
+    <path d="M7 8l1-1" stroke="currentColor" strokeWidth="0.8" opacity="0.5" />
+    <path
+      d="M17 8l-1-1"
+      stroke="currentColor"
+      strokeWidth="0.8"
+      opacity="0.5"
+    />
+    <path d="M7 16l1 1" stroke="currentColor" strokeWidth="0.8" opacity="0.5" />
+    <path
+      d="M17 16l-1 1"
+      stroke="currentColor"
+      strokeWidth="0.8"
+      opacity="0.5"
+    />
   </svg>
 );

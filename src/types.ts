@@ -57,6 +57,7 @@ export type HistoryState = {
 export type Behave = {
   annotation?: string;
   features: Polygon[];
+  isBase?: boolean;
 };
 
 export type UndoOrRedoRes = {

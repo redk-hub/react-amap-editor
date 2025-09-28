@@ -104,8 +104,12 @@ export default function useHistory<T = Polygon[]>(opt: Opts<T>) {
   };
 
   const pushHistory = useCallback((behave: Behave) => {
-    const { annotation, features } = behave;
+    const { annotation, features, isBase = false } = behave;
     const ids = Array.from(new Set(features.map((item) => item.id))).join("#");
+    if (modifies.current.includes(ids) && isBase) {
+      // 已经存在基础要素
+      return;
+    }
     modifies.current.push(ids);
 
     features.forEach((feature) => {
@@ -120,7 +124,7 @@ export default function useHistory<T = Polygon[]>(opt: Opts<T>) {
         modifyIndex.current = modifyIndex.current - tempList.length;
         delete stacks.current[`temp_${feature.id}`];
       }
-      if (!stacks.current[feature.id]) {
+      if (!stacks.current[feature.id] && !isBase) {
         addStackItem({
           feature: {
             ...feature,
@@ -129,6 +133,7 @@ export default function useHistory<T = Polygon[]>(opt: Opts<T>) {
           annotation: "add base",
         });
       }
+
       const stackItem: StackItem = {
         annotation,
         feature: JSON.parse(JSON.stringify(feature)),

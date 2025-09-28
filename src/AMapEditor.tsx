@@ -20,7 +20,7 @@ import type {
 import useHistory from "@/hooks/useHistory";
 import * as turf from "@turf/turf";
 import { processPolygons, coordsToMultiPolygon } from "@/utils/geo";
-import type { LineString, MultiPolygon, Polygon } from "geojson";
+import type { LineString, MultiPolygon, Polygon, Position } from "geojson";
 
 import { splitMultiPolygonByLine } from "@/utils/geo";
 import { shakePolygon } from "@/utils/shake";
@@ -130,15 +130,22 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
       console.log("draw finish", feature);
     };
 
-    const onEditPolygon = (id: string, coordinates: any) => {
+    const onEditPolygon = (id: string, coordinates: Position[][][]) => {
+      debugger;
+      setActiveMode("browse");
+      // pushHistory({
+      //   features: polygons.filter((item) => item.id == id),
+      //   annotation: "add base",
+      //   isBase: true,
+      // });
       const newPolys = polygons.map((p) =>
         p.id === id ? { ...p, geometry: { ...p.geometry, coordinates } } : p
       );
       setPolygons(newPolys);
-      pushHistory({
-        annotation: `edit ${id}`,
-        features: newPolys.filter((p) => p.id == id),
-      });
+      // pushHistory({
+      //   annotation: `edit ${id}`,
+      //   features: newPolys.filter((p) => p.id == id),
+      // });
     };
 
     const onDelete = () => {
@@ -243,47 +250,33 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
       if (selectedPolygons.length === 0) return;
 
       // 执行摇一摇操作，只对选中的多边形进行吸附
-      const updatedSelectedPolygons: PolygonFeature[] = [];
-      let hasChanged = false;
 
       for (const polygon of selectedPolygons) {
-        const shakenPolygon = shakePolygon(
+        shakePolygon(
           map,
           polygon,
           polygons.filter((item) => item.id != polygon.id),
           30
-        );
-        if (shakenPolygon) {
-          updatedSelectedPolygons.push(shakenPolygon);
-          hasChanged = true;
-        }
-      }
-
-      if (hasChanged) {
-        // 只更新选中的多边形，其他多边形保持不变
-        const updatedPolygons = polygons.map((p) => {
-          if (selectedIds.includes(p.id)) {
-            const updatedPolygon = updatedSelectedPolygons.find(
-              (sp) => sp.id === p.id
-            );
-            return updatedPolygon || p;
-          }
-          return p;
+        ).then((shakenPolygon) => {
+          if (!shakenPolygon) return;
+          pushHistory({
+            annotation: `摇一摇 add base ${polygon.id}`,
+            features: [polygon],
+            isBase: true,
+          });
+          setPolygons((pre) => {
+            return pre.map((item) => {
+              if (item.id === polygon.id) {
+                return shakenPolygon;
+              }
+              return item;
+            });
+          });
+          pushHistory({
+            annotation: `摇一摇 ${shakenPolygon.id}`,
+            features: [shakenPolygon],
+          });
         });
-
-        setPolygons(updatedPolygons);
-        pushHistory({
-          annotation: `摇一摇 ${selectedIds.join(",")}`,
-          features: updatedSelectedPolygons,
-        });
-
-        console.log(
-          "摇一摇操作完成，吸附了",
-          updatedSelectedPolygons.length,
-          "个多边形"
-        );
-      } else {
-        console.log("没有找到可吸附的边或顶点");
       }
     };
 
@@ -309,6 +302,8 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
             disabledDelete={!selectedIds.length}
             onShake={onShake}
             disabledShake={!selectedIds.length}
+            onEdit={() => setActiveMode("edit")}
+            disabledEdit={selectedIds.length != 1}
           />
           <div className="editor-batch-wrap">
             <ImportButton onImport={onImport} />

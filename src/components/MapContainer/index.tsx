@@ -1,11 +1,28 @@
 import React, { useEffect, useRef } from "react";
 import useAmap from "@/hooks/useAmap";
-import { DrawMode, BrowseMode, ClipMode } from "../MapModes";
+import { DrawMode, BrowseMode, ClipMode, EditMode } from "../MapModes";
 
 import type { Polygon, Feature, Id, ToolMode, Behave } from "@/types";
 import type { LineString, Position } from "geojson";
 
 const CONTAINER_ID = "amap-root";
+
+export const POLYGON_OPTIONS = {
+  selOptions: {
+    fillOpacity: 0.3,
+    fillColor: "#1677ff",
+    strokeColor: "#fa8c16",
+    strokeWeight: 2,
+    zIndex: 60,
+  },
+  defaultOptions: {
+    fillOpacity: 0.3,
+    fillColor: "#1677ff",
+    strokeColor: "#1f1f1f",
+    strokeWeight: 2,
+    zIndex: 50,
+  },
+};
 
 interface Props {
   amapKey: string;
@@ -54,12 +71,14 @@ const MapContainer: React.FC<Props> = ({
       strokeWeight: 1,
       zIndex: 1,
       strokeStyle: "dashed",
+      bubble: true, // 允许事件冒泡
       extData: { disabled: true }, // 所有的鼠标事件都需要过滤掉
     });
+
     map.add(poly);
 
     return () => {
-      if (poly) {
+      if (poly && map) {
         map.remove(poly);
       }
     };
@@ -92,21 +111,6 @@ const MapContainer: React.FC<Props> = ({
       }
     };
 
-    const selOptions = {
-      fillOpacity: 0.3,
-      fillColor: "#1677ff",
-      strokeColor: "#fa8c16",
-      strokeWeight: 2,
-      zIndex: 60,
-    };
-    const defaultOptions = {
-      fillOpacity: 0.3,
-      fillColor: "#1677ff",
-      strokeColor: "#1f1f1f",
-      strokeWeight: 2,
-      zIndex: 50,
-    };
-
     // Sync overlays logic
     const keep = new Set<string | number>();
     for (const p of polygons) {
@@ -115,7 +119,9 @@ const MapContainer: React.FC<Props> = ({
         const poly: any = new AMap.Polygon();
         poly.setOptions({
           path: p.geometry.coordinates,
-          ...(selectedIds.includes(p.id) ? selOptions : defaultOptions),
+          ...(selectedIds.includes(p.id)
+            ? POLYGON_OPTIONS.selOptions
+            : POLYGON_OPTIONS.defaultOptions),
           extData: { id: p.id },
         });
         poly.on("click", handleClick);
@@ -128,9 +134,12 @@ const MapContainer: React.FC<Props> = ({
         // Update existing overlay
         const rec = overlays.current.get(p.id)!;
         rec.polygon.setOptions({
-          path: p.geometry.coordinates,
-          ...(selectedIds.includes(p.id) ? selOptions : defaultOptions),
+          // path: p.geometry.coordinates, // 在这写path经常会不生效
+          ...(selectedIds.includes(p.id)
+            ? POLYGON_OPTIONS.selOptions
+            : POLYGON_OPTIONS.defaultOptions),
         });
+        rec.polygon.setPath(p.geometry.coordinates);
         rec.polygon.on("click", handleClick);
         overlays.current.set(p.id, {
           polygon: rec.polygon,
@@ -153,19 +162,22 @@ const MapContainer: React.FC<Props> = ({
         if (rec.clickHandler) rec.polygon.off("click", rec.clickHandler);
       }
     };
-  }, [map, AMap, mode, polygons, selectedIds, onSelectIds]);
+  }, [map, AMap, mode, polygons, selectedIds]);
 
   return (
     <>
       <div id={CONTAINER_ID} className="map-root" />
       {mode == "browse" && (
-        <BrowseMode
+        <BrowseMode map={map} AMap={AMap} onSelectIds={onSelectIds} />
+      )}
+      {mode == "edit" && (
+        <EditMode
           map={map}
           AMap={AMap}
+          pushHistory={pushHistory}
           polygons={polygons}
           selectedIds={selectedIds}
           boxFeature={boxFeature}
-          onSelectIds={onSelectIds}
           onEditPolygon={onEditPolygon}
         />
       )}

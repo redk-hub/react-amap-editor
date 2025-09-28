@@ -4,6 +4,7 @@ import { Button, Space, Tooltip } from "@/components/base";
 import {
   ScissorIcon,
   EditIcon,
+  EditModeIcon,
   UndoIcon,
   RedoIcon,
   MergeIcon,
@@ -27,6 +28,8 @@ type Props = {
   disabledDelete?: boolean;
   onShake?: () => void;
   disabledShake?: boolean;
+  onEdit?: () => void;
+  disabledEdit?: boolean;
 };
 
 const IconBtn: React.FC<React.ComponentProps<typeof Button>> = (p) => (
@@ -48,6 +51,8 @@ const Toolbar: React.FC<Props> = ({
   disabledDelete,
   onShake,
   disabledShake,
+  onEdit,
+  disabledEdit,
 }) => {
   return (
     <Space wrap>
@@ -64,6 +69,15 @@ const Toolbar: React.FC<Props> = ({
           type={mode === "draw" ? "primary" : "default"}
           icon={<EditIcon />}
           onClick={() => onModeChange(mode === "draw" ? "browse" : "draw")}
+        />
+      </Tooltip>
+
+      <Tooltip title="编辑模式：点击进入编辑模式，可以修改已绘制的多边形">
+        <IconBtn
+          type={mode === "edit" ? "primary" : "default"}
+          icon={<EditModeIcon />}
+          onClick={() => onModeChange(mode === "edit" ? "browse" : "edit")}
+          disabled={disabledEdit}
         />
       </Tooltip>
 

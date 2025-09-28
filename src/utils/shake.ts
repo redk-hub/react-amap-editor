@@ -3,19 +3,49 @@ import type { Polygon } from "@/types";
 import * as turf from "@turf/turf";
 import { getSnap } from "./snap";
 
-/**
- * 计算两点之间的屏幕像素距离
- */
-function getPixelDistance(
-  map: any,
-  point1: Position,
-  point2: Position
-): number {
-  const pixel1 = map.lngLatToContainer(point1);
-  const pixel2 = map.lngLatToContainer(point2);
-  return Math.sqrt(
-    Math.pow(pixel2.x - pixel1.x, 2) + Math.pow(pixel2.y - pixel1.y, 2)
-  );
+export function shakePolygonAnimation(polygon, map) {
+  const overlay = map
+    .getAllOverlays("polygon")
+    .find((item) => item.getExtData()?.id === polygon?.id);
+  return new Promise((resolve) => {
+    const originalPath = overlay
+      .getPath()
+      .map((ringSet) => ringSet.map((ring) => ring.map((p) => [p.lng, p.lat])));
+
+    let step = 0;
+    const totalSteps = 20; // 2s / 50ms
+    const interval = 10;
+    const pixelOffset = 2;
+
+    const timer = setInterval(() => {
+      step++;
+      const direction = step % 2 === 0 ? 1 : -1;
+
+      const newPath = originalPath.map((ringSet) =>
+        ringSet.map((ring) =>
+          ring.map(([lng, lat]) => {
+            const pixel = map.lngLatToContainer([lng, lat]);
+
+            if (step % 4 === 0) {
+              pixel.x += direction * pixelOffset; // 左右抖动
+            } else {
+              pixel.y += direction * pixelOffset; // 上下抖动
+            }
+            const newLngLat = map.containerToLngLat([pixel.x, pixel.y]);
+            return [newLngLat.lng, newLngLat.lat];
+          })
+        )
+      );
+
+      overlay.setPath(newPath);
+
+      if (step >= totalSteps) {
+        clearInterval(timer);
+        overlay.setPath(originalPath); // 恢复
+        resolve(true);
+      }
+    }, interval);
+  });
 }
 
 function findNearestSnapPoint(
@@ -47,46 +77,21 @@ export function shakePolygon(
   targetPolygon: Polygon,
   allPolygons: Polygon[],
   threshold: number = 10
-): Polygon | null {
+): Promise<Polygon | null> {
   if (!map) return null;
-
-  let hasChange = false;
-  debugger;
-  const { coordinates, type } = targetPolygon.geometry;
-  const newCoords = findNearestSnapPoint(
-    map,
-    coordinates,
-    allPolygons,
-    threshold,
-    (bool: boolean) => (hasChange = bool)
-  );
-  if (hasChange) {
-    return { ...targetPolygon, geometry: { type, coordinates: newCoords } };
-  }
-  return null;
-}
-
-/**
- * 批量摇一摇多个多边形
- */
-export function shakePolygons(
-  map: any,
-  targetPolygons: Polygon[],
-  allPolygons: Polygon[],
-  threshold: number = 10
-): Polygon[] {
-  const result: Polygon[] = [];
-  let hasAnyChanged = false;
-
-  for (const polygon of targetPolygons) {
-    const shakenPolygon = shakePolygon(map, polygon, allPolygons, threshold);
-    if (shakenPolygon) {
-      result.push(shakenPolygon);
-      hasAnyChanged = true;
-    } else {
-      result.push(polygon);
+  return shakePolygonAnimation(targetPolygon, map).then((res) => {
+    let hasChange = false;
+    const { coordinates, type } = targetPolygon.geometry;
+    const newCoords = findNearestSnapPoint(
+      map,
+      coordinates,
+      allPolygons,
+      threshold,
+      (bool: boolean) => (hasChange = bool)
+    );
+    if (hasChange) {
+      return { ...targetPolygon, geometry: { type, coordinates: newCoords } };
     }
-  }
-
-  return hasAnyChanged ? result : targetPolygons;
+    return null;
+  });
 }
