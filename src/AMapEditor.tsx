@@ -38,7 +38,15 @@ const AMapEditor = forwardRef<AMapEditorRef, AMapEditorProps>((props, ref) => {
 
 const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
   (props, ref) => {
-    const { amapKey, className, style, bbox, onSelect } = props;
+    const {
+      amapKey,
+      className,
+      style,
+      bbox,
+      features,
+      selectedIds: propsSelectedIds,
+      onSelect,
+    } = props;
     const bus = useEventBus();
     const [polygons, setPolygons] = useState<Feature<MultiPolygon>[]>([]);
     const [selectedIds, setSelectedIds] = useState<Id[]>([]);
@@ -66,6 +74,18 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
       return coordsToMultiPolygon(bbox);
     }, [bbox]);
 
+    useEffect(() => {
+      if (features) {
+        setPolygons(features);
+      }
+    }, [features]);
+
+    useEffect(() => {
+      if (propsSelectedIds != undefined) {
+        setSelectedIds(propsSelectedIds);
+      }
+    }, [propsSelectedIds]);
+
     // Rest of the AMapEditorContent implementation
     useEffect(() => {
       const handleUndoOrRedo = (value: UndoOrRedoRes[]) => {
@@ -91,12 +111,21 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
       };
     }, []);
 
+    const onSelectIds = (ids: Id[]) => {
+      if (propsSelectedIds != undefined && onSelect) {
+        onSelect(ids);
+      } else {
+        setSelectedIds(ids);
+      }
+    };
+
     const onDrawFinish = (feature: PolygonFeature) => {
       setPolygons([...polygons, feature]);
       pushHistory({
         annotation: `draw finish ${feature.id}`,
         features: [feature],
       });
+      console.log("draw finish", feature);
     };
 
     const onEditPolygon = (id: string, coordinates: any) => {
@@ -118,7 +147,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
           .map((item) => ({ ...item, geometry: null })),
       });
       setPolygons((prev) => prev.filter((p) => !selectedIds.includes(p.id)));
-      setSelectedIds([]);
+      onSelectIds([]);
     };
 
     const onStartClip = (line: Feature<LineString>) => {
@@ -129,7 +158,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
 
       setPolygons([...newPolys, ...polys]);
       setActiveMode("browse");
-      setSelectedIds([]);
+      onSelectIds([]);
       pushHistory({
         annotation: `clip ${feature.id}`,
         features: [{ ...feature, geometry: null }, ...polys],
@@ -170,7 +199,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
             cleaned,
           ],
         });
-        setSelectedIds([]);
+        onSelectIds([]);
       }
     };
 
@@ -196,20 +225,10 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
         }
 
         // select imported items
-        setSelectedIds(assignedIds);
+        onSelectIds(assignedIds);
 
         return next;
       });
-    };
-
-    const onSelectIds = (clickIds: Id[]) => {
-      setSelectedIds(clickIds);
-      if (onSelect) {
-        const selectedFeatures = polygons.filter((p) =>
-          clickIds.includes(p.id)
-        );
-        onSelect(clickIds, selectedFeatures);
-      }
     };
 
     return (

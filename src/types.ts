@@ -21,8 +21,10 @@ export interface AMapEditorProps {
   className?: string;
   style?: React.CSSProperties;
   amapKey: string;
-  onSelect?: (ids: Id[], features: Polygon[]) => void;
   bbox?: Position[][][] | Position[][] | Position[];
+  features?: Polygon[];
+  selectedIds?: Id[];
+  onSelect?: (ids: Id[]) => void;
 }
 
 export type ToolMode = "browse" | "draw" | "clip" | "merge" | "edit";

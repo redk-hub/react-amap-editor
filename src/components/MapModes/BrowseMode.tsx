@@ -3,7 +3,7 @@ import type { Id, Polygon } from "@/types";
 import type { Position } from "geojson";
 import * as turf from "@turf/turf";
 import { amapPathToGeoJSONCoords, isPointInPolygon } from "@/utils/geo";
-
+import { getSnap } from "@/utils/snap";
 interface BrowseModeProps {
   map: any;
   AMap: any;
@@ -24,6 +24,7 @@ export const BrowseMode: React.FC<BrowseModeProps> = ({
   onEditPolygon,
 }) => {
   const editor = useRef<any>(null);
+  const lastPath = useRef<Position[][]>([]); // 记录上一次的路径
 
   useEffect(() => {
     if (!map) return;
@@ -31,7 +32,11 @@ export const BrowseMode: React.FC<BrowseModeProps> = ({
     const handleMapClick = (e) => {
       const clickLngLat = e.lnglat; // 点击点的经纬度
       const polys = map.getAllOverlays("polygon");
-      if (polys?.some((item) => item.contains(clickLngLat))) {
+      if (
+        polys?.some(
+          (item) => !item.getExtData()?.disabled && item.contains(clickLngLat)
+        )
+      ) {
         return;
       }
       onSelectIds([]);
@@ -65,8 +70,12 @@ export const BrowseMode: React.FC<BrowseModeProps> = ({
 
       // 检查移动的点是否在bbox内
       if (!isPointInPolygon(movedPoint, boxFeature)) {
-        // 如果超出边界，恢复到移动前的位置
-        e.target.setPosition(e.target.get("sourcePosition"));
+        const coords = amapPathToGeoJSONCoords(e.target.getPath());
+        const clipped = turf.intersect(
+          turf.featureCollection([turf.multiPolygon(coords), boxFeature])
+        );
+        e.target.setPath(clipped.geometry.coordinates);
+        editor.current.setTarget(e.target);
       }
     };
 
@@ -76,18 +85,14 @@ export const BrowseMode: React.FC<BrowseModeProps> = ({
       const newCoords = amapPathToGeoJSONCoords(newPath);
       const preCoords = amapPathToGeoJSONCoords(prePath);
 
-      if (
-        turf.booleanEqual(
-          turf.multiPolygon(newCoords),
-          turf.multiPolygon(preCoords)
-        )
-      ) {
+      if (JSON.stringify(newCoords) === JSON.stringify(preCoords)) {
         return;
       }
       onEditPolygon(selectedPoly.getExtData()?.id, newCoords);
     };
 
     if (selectedPoly) {
+      lastPath.current = selectedPoly.getPath();
       // 创建编辑器
       editor.current = new AMap.PolygonEditor(map, selectedPoly, {
         controlPoint: {
@@ -104,7 +109,9 @@ export const BrowseMode: React.FC<BrowseModeProps> = ({
 
       // 设置吸附多边形（排除当前编辑的多边形）
       const adsorbPolygons = overlays.filter(
-        (p) => p.getExtData()?.id !== selectedPoly.getExtData()?.id
+        (p) =>
+          !p.getExtData()?.disabled &&
+          p.getExtData()?.id !== selectedPoly.getExtData()?.id
       );
 
       editor.current.setAdsorbPolygons(adsorbPolygons);
@@ -120,14 +127,14 @@ export const BrowseMode: React.FC<BrowseModeProps> = ({
 
     return () => {
       if (selectedPoly) {
+        editor.current.close();
         editor.current.off("adjust", handleMove);
         editor.current.off("addnode", handleMove);
         editor.current.off("end", handleEnd);
-        editor.current.close();
         editor.current = null;
       }
     };
-  }, [map, selectedIds, polygons, onEditPolygon, boxFeature]); // 添加bbox作为依赖
+  }, [map, selectedIds, onEditPolygon, boxFeature]); // 添加bbox作为依赖
 
   return null;
 };

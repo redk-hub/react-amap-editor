@@ -36,13 +36,37 @@ const MapContainer: React.FC<Props> = ({
   const overlays = useRef<Map<Id, any>>(new Map());
 
   useEffect(() => {
+    if (!map || !AMap || !boxFeature) return;
+    const poly: any = new AMap.Polygon();
+    poly.setOptions({
+      path: boxFeature.geometry.coordinates,
+      fillOpacity: 0.001,
+      fillColor: "red",
+      strokeColor: "red",
+      strokeWeight: 1,
+      zIndex: 1,
+      strokeStyle: "dashed",
+      extData: { disabled: true }, // 所有的鼠标事件都需要过滤掉
+    });
+    map.add(poly);
+
+    return () => {
+      if (poly) {
+        map.remove(poly);
+      }
+    };
+  }, [boxFeature, map, AMap]);
+
+  useEffect(() => {
     if (!map || !AMap) return;
 
     const handleClick = (e: any) => {
       const id = e.target.getExtData()?.id;
       if (!id || mode == "draw") return;
       const polys = map.getAllOverlays("polygon");
-      const clickPolys = polys.filter((item) => item.contains(e.lnglat));
+      const clickPolys = polys.filter(
+        (item) => !item.getExtData()?.disabled && item.contains(e.lnglat)
+      );
       const clickIds = clickPolys.map((item) => item.getExtData()?.id);
       if (e.originEvent.shiftKey) {
         // shift + 点击实现多选
