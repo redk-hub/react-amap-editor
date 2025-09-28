@@ -18,6 +18,7 @@ interface Props {
   onDrawFinish: (feature: Polygon) => void;
   onEditPolygon: (id: Id, coordinates: any) => void;
   onStartClip: (line: Feature<LineString>) => void;
+  onMapReady?: (map: any) => void;
 }
 
 const MapContainer: React.FC<Props> = ({
@@ -31,9 +32,16 @@ const MapContainer: React.FC<Props> = ({
   onDrawFinish,
   onEditPolygon,
   onStartClip,
+  onMapReady,
 }) => {
   const { map, AMap } = useAmap(CONTAINER_ID, amapKey);
   const overlays = useRef<Map<Id, any>>(new Map());
+
+  useEffect(() => {
+    if (map && onMapReady) {
+      onMapReady(map);
+    }
+  }, [map, onMapReady]);
 
   useEffect(() => {
     if (!map || !AMap || !boxFeature) return;

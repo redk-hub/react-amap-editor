@@ -81,3 +81,15 @@ export const DeleteIcon = () => (
     <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
   </svg>
 );
+
+export const ShakeIcon = () => (
+  <svg
+    viewBox="0 0 24 24"
+    width="1em"
+    height="1em"
+    fill="currentColor"
+    style={{ transform: "translateY(2px)" }}
+  >
+    <path d="M15.5 14.5c0-2.8 2.2-5 5-5 .36 0 .71.04 1.05.11L23.64 6H16v8l2.5-2.5L20 13.5c-1.35 0-2.5 1.15-2.5 2.5s1.15 2.5 2.5 2.5 2.5-1.15 2.5-2.5h2c0 2.48-2.02 4.5-4.5 4.5s-4.5-2.02-4.5-4.5zM4 9v2h8V9H4zm0 4v2h10v-2H4zm0 4v2h10v-2H4z" />
+  </svg>
+);

@@ -8,6 +8,7 @@ import {
   RedoIcon,
   MergeIcon,
   DeleteIcon,
+  ShakeIcon,
 } from "@/components/icons";
 import type { ToolMode } from "@/types";
 
@@ -24,6 +25,8 @@ type Props = {
   disabledClip?: boolean;
   onDelete?: () => void;
   disabledDelete?: boolean;
+  onShake?: () => void;
+  disabledShake?: boolean;
 };
 
 const IconBtn: React.FC<React.ComponentProps<typeof Button>> = (p) => (
@@ -43,6 +46,8 @@ const Toolbar: React.FC<Props> = ({
   disabledClip,
   onDelete,
   disabledDelete,
+  onShake,
+  disabledShake,
 }) => {
   return (
     <Space wrap>
@@ -89,6 +94,14 @@ const Toolbar: React.FC<Props> = ({
           icon={<DeleteIcon />}
           onClick={onDelete}
           disabled={disabledDelete}
+        />
+      </Tooltip>
+
+      <Tooltip title="摇一摇：选中多边形自动吸附到周边多边形的边或顶点（10px临界值）">
+        <IconBtn
+          icon={<ShakeIcon />}
+          onClick={onShake}
+          disabled={disabledShake}
         />
       </Tooltip>
     </Space>

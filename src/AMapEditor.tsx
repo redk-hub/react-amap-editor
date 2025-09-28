@@ -23,6 +23,7 @@ import { processPolygons, coordsToMultiPolygon } from "@/utils/geo";
 import type { LineString, MultiPolygon, Polygon } from "geojson";
 
 import { splitMultiPolygonByLine } from "@/utils/geo";
+import { shakePolygon } from "@/utils/shake";
 
 export interface AMapEditorRef {
   getUnSavedFeatures: () => { operate: string; feature: PolygonFeature }[];
@@ -51,6 +52,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
     const [polygons, setPolygons] = useState<Feature<MultiPolygon>[]>([]);
     const [selectedIds, setSelectedIds] = useState<Id[]>([]);
     const [activeMode, setActiveMode] = useState<ToolMode>("browse");
+    const [map, setMap] = useState<any>(null);
 
     const {
       pushHistory,
@@ -231,6 +233,60 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
       });
     };
 
+    // 摇一摇功能
+    const onShake = () => {
+      if (!map || selectedIds.length === 0) return;
+
+      const selectedPolygons = polygons.filter((p) =>
+        selectedIds.includes(p.id)
+      );
+      if (selectedPolygons.length === 0) return;
+
+      // 执行摇一摇操作，只对选中的多边形进行吸附
+      const updatedSelectedPolygons: PolygonFeature[] = [];
+      let hasChanged = false;
+
+      for (const polygon of selectedPolygons) {
+        const shakenPolygon = shakePolygon(
+          map,
+          polygon,
+          polygons.filter((item) => item.id != polygon.id),
+          30
+        );
+        if (shakenPolygon) {
+          updatedSelectedPolygons.push(shakenPolygon);
+          hasChanged = true;
+        }
+      }
+
+      if (hasChanged) {
+        // 只更新选中的多边形，其他多边形保持不变
+        const updatedPolygons = polygons.map((p) => {
+          if (selectedIds.includes(p.id)) {
+            const updatedPolygon = updatedSelectedPolygons.find(
+              (sp) => sp.id === p.id
+            );
+            return updatedPolygon || p;
+          }
+          return p;
+        });
+
+        setPolygons(updatedPolygons);
+        pushHistory({
+          annotation: `摇一摇 ${selectedIds.join(",")}`,
+          features: updatedSelectedPolygons,
+        });
+
+        console.log(
+          "摇一摇操作完成，吸附了",
+          updatedSelectedPolygons.length,
+          "个多边形"
+        );
+      } else {
+        console.log("没有找到可吸附的边或顶点");
+      }
+    };
+
     return (
       <div
         className={className}
@@ -251,6 +307,8 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
             disabledClip={selectedIds.length != 1}
             onDelete={onDelete}
             disabledDelete={!selectedIds.length}
+            onShake={onShake}
+            disabledShake={!selectedIds.length}
           />
           <div className="editor-batch-wrap">
             <ImportButton onImport={onImport} />
@@ -267,6 +325,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
           onStartClip={onStartClip}
           selectedIds={selectedIds}
           onSelectIds={onSelectIds}
+          onMapReady={setMap}
         />
       </div>
     );

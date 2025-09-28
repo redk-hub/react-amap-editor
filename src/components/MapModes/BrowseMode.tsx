@@ -24,7 +24,6 @@ export const BrowseMode: React.FC<BrowseModeProps> = ({
   onEditPolygon,
 }) => {
   const editor = useRef<any>(null);
-  const lastPath = useRef<Position[][]>([]); // 记录上一次的路径
 
   useEffect(() => {
     if (!map) return;
@@ -92,7 +91,6 @@ export const BrowseMode: React.FC<BrowseModeProps> = ({
     };
 
     if (selectedPoly) {
-      lastPath.current = selectedPoly.getPath();
       // 创建编辑器
       editor.current = new AMap.PolygonEditor(map, selectedPoly, {
         controlPoint: {
@@ -134,7 +132,7 @@ export const BrowseMode: React.FC<BrowseModeProps> = ({
         editor.current = null;
       }
     };
-  }, [map, selectedIds, onEditPolygon, boxFeature]); // 添加bbox作为依赖
+  }, [map, selectedIds, polygons, onEditPolygon, boxFeature]); // 添加bbox作为依赖
 
   return null;
 };
