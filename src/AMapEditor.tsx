@@ -256,7 +256,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
           map,
           polygon,
           polygons.filter((item) => item.id != polygon.id),
-          30
+          20
         ).then((shakenPolygon) => {
           if (!shakenPolygon) return;
           pushHistory({
@@ -295,15 +295,25 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
             disabledUndo={disableUndo}
             disabledRedo={disableRedo}
             onMerge={onMerge}
-            disabledMerge={selectedIds.length < 2}
+            disabledMerge={
+              selectedIds.length < 2 || ["edit", "clip"].includes(activeMode)
+            }
             onClip={() => setActiveMode("clip")}
-            disabledClip={selectedIds.length != 1}
+            disabledClip={
+              selectedIds.length != 1 || ["edit"].includes(activeMode)
+            }
             onDelete={onDelete}
-            disabledDelete={!selectedIds.length}
+            disabledDelete={
+              !selectedIds.length || ["edit", "clip"].includes(activeMode)
+            }
             onShake={onShake}
-            disabledShake={!selectedIds.length}
+            disabledShake={
+              !selectedIds.length || ["edit", "clip"].includes(activeMode)
+            }
             onEdit={() => setActiveMode("edit")}
-            disabledEdit={selectedIds.length != 1}
+            disabledEdit={
+              selectedIds.length != 1 || ["clip"].includes(activeMode)
+            }
           />
           <div className="editor-batch-wrap">
             <ImportButton onImport={onImport} />

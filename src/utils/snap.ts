@@ -12,7 +12,8 @@ export function getSnap(
   map: AMap.Map,
   candidates: Polygon[],
   pointLngLat: Position,
-  thresholdPx = 10
+  thresholdPx = 10,
+  vertexPriority = false //是否是顶点优化
 ): SnapTarget | null {
   const ptPix = map.lngLatToContainer(pointLngLat);
   let best: SnapTarget | null = null;
@@ -38,17 +39,19 @@ export function getSnap(
         best = { lnglat: c, distPx: d };
       }
     }
-    // edges
-    for (let i = 0; i < coords.length; i++) {
-      const a = coords[i];
-      const b = coords[(i + 1) % coords.length];
-      const snapOnSeg = nearestPointOnSegmentPx(map, a, b, ptPix);
-      if (
-        snapOnSeg &&
-        snapOnSeg.distPx < thresholdPx &&
-        (!best || snapOnSeg.distPx < best.distPx)
-      ) {
-        best = { lnglat: snapOnSeg.lnglat, distPx: snapOnSeg.distPx };
+    if (!vertexPriority || !best) {
+      // edges
+      for (let i = 0; i < coords.length; i++) {
+        const a = coords[i];
+        const b = coords[(i + 1) % coords.length];
+        const snapOnSeg = nearestPointOnSegmentPx(map, a, b, ptPix);
+        if (
+          snapOnSeg &&
+          snapOnSeg.distPx < thresholdPx &&
+          (!best || snapOnSeg.distPx < best.distPx)
+        ) {
+          best = { lnglat: snapOnSeg.lnglat, distPx: snapOnSeg.distPx };
+        }
       }
     }
   }

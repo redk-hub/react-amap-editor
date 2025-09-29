@@ -26,6 +26,12 @@ export const EditMode: React.FC<BrowseModeProps> = memo(
   }) => {
     const editor = useRef<any>(null);
 
+    useEffect(() => {
+      return () => {
+        editor.current?.close();
+      };
+    }, []);
+
     // 处理选中多边形变化，开启编辑模式
     useEffect(() => {
       if (!map || !onEditPolygon || selectedIds.length != 1) return;
@@ -89,10 +95,10 @@ export const EditMode: React.FC<BrowseModeProps> = memo(
       const handleEnd = () => {
         const newPath = selectedPoly.getPath();
         const newCoords = amapPathToGeoJSONCoords(newPath);
-        // const preCoords = amapPathToGeoJSONCoords(prePath);
-        // if (JSON.stringify(newCoords) === JSON.stringify(preCoords)) {
-        //   return;
-        // }
+        const preCoords = amapPathToGeoJSONCoords(prePath);
+        if (JSON.stringify(newCoords) === JSON.stringify(preCoords)) {
+          return;
+        }
         onEditPolygon(selectedPoly.getExtData()?.id, newCoords);
       };
 
@@ -149,9 +155,9 @@ export const EditMode: React.FC<BrowseModeProps> = memo(
 
       return () => {
         if (selectedPoly) {
-          if (editor.current.isOpenStatus) {
-            editor.current.close();
-          }
+          // if (editor.current.isOpenStatus) {
+          //   editor.current.close();
+          // }
           editor.current.off("adjust", handleMove);
           editor.current.off("addnode", handleMove);
           editor.current.off("end", handleEnd);

@@ -14,8 +14,8 @@ export function shakePolygonAnimation(polygon, map) {
 
     let step = 0;
     const totalSteps = 20; // 2s / 50ms
-    const interval = 10;
-    const pixelOffset = 2;
+    const interval = 2;
+    const pixelOffset = 3;
 
     const timer = setInterval(() => {
       step++;
@@ -53,6 +53,7 @@ function findNearestSnapPoint(
   targetCoords: Position[][][] | Position[][] | Position[],
   allPolygons: Polygon[],
   threshold: number = 20,
+
   callback: (e: boolean) => void
 ) {
   return targetCoords.map((item) => {
@@ -60,7 +61,7 @@ function findNearestSnapPoint(
       return findNearestSnapPoint(map, item, allPolygons, threshold, callback);
     } else {
       const vertex = item as Position;
-      const snap = getSnap(map, allPolygons, vertex, threshold);
+      const snap = getSnap(map, allPolygons, vertex, threshold, true);
       if (snap) {
         callback(true);
       }
