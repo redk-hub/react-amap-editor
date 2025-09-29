@@ -32,7 +32,7 @@ export default function useAmap(containerId: string, key: string) {
           resizeEnable: true,
           zoom: 12,
           viewMode: "3D",
-          center: [116.397428, 39.90923],
+          center: [113.700141, 34.826034],
           doubleClickZoom: false,
           mapStyle: "amap://styles/whitesmoke",
         });

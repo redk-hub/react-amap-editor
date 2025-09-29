@@ -106,11 +106,10 @@ export default function useHistory<T = Polygon[]>(opt: Opts<T>) {
   const pushHistory = useCallback((behave: Behave) => {
     const { annotation, features, isBase = false } = behave;
     const ids = Array.from(new Set(features.map((item) => item.id))).join("#");
-    if (modifies.current.includes(ids) && isBase) {
-      // 已经存在基础要素
-      return;
+
+    if (!isBase) {
+      modifies.current.push(ids);
     }
-    modifies.current.push(ids);
 
     features.forEach((feature) => {
       const tempList = modifies.current.filter(
@@ -132,6 +131,9 @@ export default function useHistory<T = Polygon[]>(opt: Opts<T>) {
           },
           annotation: "add base",
         });
+      }
+      if (stacks.current[feature.id] && isBase) {
+        return;
       }
 
       const stackItem: StackItem = {
@@ -296,46 +298,54 @@ export default function useHistory<T = Polygon[]>(opt: Opts<T>) {
     });
   };
 
-  const getUnSavedFeatures = (): { operate: string; feature: Polygon }[] => {
+  const getCurrentState = (): { operate: string; feature: Polygon }[] => {
     if (modifyIndex.current < 0) {
       return [];
     }
     let unSaved: { operate: string; feature: Polygon }[] = [];
-    let operate: string = "update";
-    modifies.current.slice(0, modifyIndex.current + 1).forEach((ids, index) => {
-      ids.split("#").forEach((id) => {
-        const stack = stacks.current[id];
+    let operate: string = "";
+    [
+      ...new Set(
+        modifies.current
+          .slice(0, modifyIndex.current + 1)
+          .reduce((acc, cur) => {
+            return acc.concat(cur.split("#"));
+          }, [])
+      ),
+    ].forEach((id) => {
+      const stack = stacks.current[id];
 
-        if (!stack) {
-          throw new Error("要素信息不完整");
-        }
+      if (!stack) {
+        throw new Error("要素信息不完整");
+      }
 
-        const { stackItems, index: stackIndex } = stack;
-        if (stackIndex <= 0) {
-          return;
-        }
-        // 如果基类有经纬度，当前没有经纬度，表示删除
-        // 如果基类没有经纬度，当前有经纬度，表示新增
-        // 如果基类和当前都有经纬度，表示修改
-        if (
-          !stackItems[0]?.feature?.geometry?.coordinates?.length &&
-          stackItems[stackIndex]?.feature?.geometry?.coordinates?.length
-        ) {
-          operate = "add";
-        } else if (
-          stackItems[0]?.feature?.geometry?.coordinates?.length &&
-          stackItems[stackIndex]?.feature?.geometry?.coordinates?.length
-        ) {
-          operate = "update";
-        } else if (
-          stackItems[0]?.feature?.geometry?.coordinates?.length &&
-          !stackItems[stackIndex]?.feature?.geometry?.coordinates?.length
-        ) {
-          operate = "delete";
-        }
+      const { stackItems, index: stackIndex } = stack;
+      if (stackIndex <= 0) {
+        return;
+      }
+      // 如果基类有经纬度，当前没有经纬度，表示删除
+      // 如果基类没有经纬度，当前有经纬度，表示新增
+      // 如果基类和当前都有经纬度，表示修改
+      if (
+        !stackItems[0]?.feature?.geometry?.coordinates?.length &&
+        stackItems[stackIndex]?.feature?.geometry?.coordinates?.length
+      ) {
+        operate = "add";
+      } else if (
+        stackItems[0]?.feature?.geometry?.coordinates?.length &&
+        stackItems[stackIndex]?.feature?.geometry?.coordinates?.length
+      ) {
+        operate = "update";
+      } else if (
+        stackItems[0]?.feature?.geometry?.coordinates?.length &&
+        !stackItems[stackIndex]?.feature?.geometry?.coordinates?.length
+      ) {
+        operate = "delete";
+      }
 
+      if (operate) {
         unSaved.push({ operate, feature: stackItems[stackIndex].feature });
-      });
+      }
     });
 
     return unSaved;
@@ -347,6 +357,7 @@ export default function useHistory<T = Polygon[]>(opt: Opts<T>) {
     modifies.current = [];
     undoNumber.current = 0;
     stacks.current = {};
+    setActionNum((pre) => pre + 1);
   };
 
   return {
@@ -354,7 +365,7 @@ export default function useHistory<T = Polygon[]>(opt: Opts<T>) {
     pushHistory,
     undo,
     redo,
-    getUnSavedFeatures,
+    getCurrentState,
     clearHistory,
     disableUndo,
     disableRedo,

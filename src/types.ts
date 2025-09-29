@@ -14,7 +14,7 @@ export type Feature<T extends Geometry> = Omit<TurfFeature<T>, "id"> & {
 export type DrawMode = "point" | "line" | "polygon" | "browse";
 
 export interface AMapEditorRef {
-  getUnSavedFeatures: () => { operate: string; feature: Polygon }[];
+  getCurrentState: () => { operate: string; feature: Polygon }[];
 }
 
 export interface AMapEditorProps {

@@ -26,7 +26,11 @@ import { splitMultiPolygonByLine } from "@/utils/geo";
 import { shakePolygon } from "@/utils/shake";
 
 export interface AMapEditorRef {
-  getUnSavedFeatures: () => { operate: string; feature: PolygonFeature }[];
+  history: {
+    getCurrentState: () => { operate: string; feature: PolygonFeature }[];
+    initial: (features: PolygonFeature[], clear: boolean) => void;
+    clear: () => void;
+  };
 }
 
 const AMapEditor = forwardRef<AMapEditorRef, AMapEditorProps>((props, ref) => {
@@ -60,15 +64,17 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
       redo,
       disableUndo,
       disableRedo,
-      getUnSavedFeatures,
+      getCurrentState,
       initial,
       clearHistory,
     } = useHistory({});
 
     useImperativeHandle(ref, () => ({
-      getUnSavedFeatures,
-      initial,
-      clearHistory,
+      history: {
+        getCurrentState,
+        initial,
+        clear: clearHistory,
+      },
     }));
 
     const boxFeature = useMemo(() => {
@@ -150,6 +156,11 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
 
     const onDelete = () => {
       pushHistory({
+        annotation: `add base delete ${selectedIds.join(",")}`,
+        features: polygons.filter((p) => selectedIds.includes(p.id)),
+        isBase: true,
+      });
+      pushHistory({
         annotation: `delete ${selectedIds.join(",")}`,
         features: polygons
           .filter((p) => selectedIds.includes(p.id))
@@ -162,6 +173,11 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
     const onStartClip = (line: Feature<LineString>) => {
       const feature = polygons.find((p) => selectedIds.includes(p.id));
       if (!feature) return;
+      pushHistory({
+        annotation: `add base clip ${feature.id}`,
+        features: [feature],
+        isBase: true,
+      });
       const polys = splitMultiPolygonByLine(feature, line);
       const newPolys = polygons.filter((item) => item.id != feature.id);
 
@@ -178,14 +194,14 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
       // 使用turf把选中的多边形合并
       if (selectedIds.length < 2) return;
       let selectedPolygons = polygons.filter((p) => selectedIds.includes(p.id));
-      selectedPolygons = processPolygons(selectedPolygons);
+      const newPolygons = processPolygons(selectedPolygons);
       let merged;
-      if (selectedPolygons.length == 1) {
-        merged = selectedPolygons[0];
+      if (newPolygons.length == 1) {
+        merged = newPolygons[0];
       } else {
-        merged = turf.union(
-          turf.featureCollection(selectedPolygons)
-        ) as Feature<Polygon | MultiPolygon>;
+        merged = turf.union(turf.featureCollection(newPolygons)) as Feature<
+          Polygon | MultiPolygon
+        >;
       }
 
       if (merged) {
@@ -201,6 +217,12 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
 
         next.push(cleaned);
         setPolygons(next);
+        debugger;
+        pushHistory({
+          annotation: `add base merge ${selectedIds.join(",")}`,
+          features: selectedPolygons,
+          isBase: true,
+        });
         pushHistory({
           annotation: `merge ${selectedIds.join(",")}`,
           features: [

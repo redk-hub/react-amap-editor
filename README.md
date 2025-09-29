@@ -66,7 +66,7 @@ function App() {
 ```tsx
 interface AMapEditorRef {
   // 获取所有未保存的修改记录
-  getUnSavedFeatures: () => {
+  getCurrentState: () => {
     operate: string; // 操作类型：'add' | 'update' | 'delete'
     feature: Polygon; // 要素数据
   }[];
@@ -80,7 +80,7 @@ interface AMapEditorRef {
 const editorRef = useRef<AMapEditorRef>(null);
 
 // 获取未保存的修改
-const unSaved = editorRef.current?.getUnSavedFeatures();
+const unSaved = editorRef.current?.getCurrentState();
 
 // 初始化编辑器
 editorRef.current?.initial(features, true);

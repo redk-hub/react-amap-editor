@@ -25,6 +25,8 @@ export default defineConfig({
     cssCodeSplit: false,
     sourcemap: true,
     outDir: "dist",
+    target: "es2017",
+    minify: "terser",
     rollupOptions: {
       external: ["react", "react-dom"],
       output: {
