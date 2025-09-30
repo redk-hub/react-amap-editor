@@ -36,16 +36,23 @@ export const Button: React.FC<ButtonProps> = ({
 };
 
 type TooltipProps = {
+  visible?: boolean;
   title: React.ReactNode;
   children: React.ReactNode;
 };
 
-export const Tooltip: React.FC<TooltipProps> = ({ title, children }) => {
+export const Tooltip: React.FC<TooltipProps> = ({
+  title,
+  children,
+  visible = true,
+}) => {
   return (
-    <div className="tooltip">
-      {children}
-      <div className="tooltip-content">{title}</div>
-    </div>
+    !!visible && (
+      <div className="tooltip">
+        {children}
+        <div className="tooltip-content">{title}</div>
+      </div>
+    )
   );
 };
 

@@ -26,6 +26,9 @@ export const POLYGON_OPTIONS = {
 
 interface Props {
   amapKey: string;
+  center: Position;
+  zoom: number;
+  mapStyle: string;
   mode: ToolMode;
   polygons: Polygon[];
   selectedIds: Id[];
@@ -41,6 +44,9 @@ interface Props {
 
 const MapContainer: React.FC<Props> = ({
   amapKey,
+  center,
+  zoom,
+  mapStyle,
   mode,
   polygons,
   selectedIds,
@@ -53,7 +59,12 @@ const MapContainer: React.FC<Props> = ({
   onStartClip,
   onMapReady,
 }) => {
-  const { map, AMap } = useAmap(CONTAINER_ID, amapKey);
+  const { map, AMap } = useAmap(CONTAINER_ID, {
+    amapKey,
+    center,
+    zoom,
+    mapStyle,
+  });
   const overlays = useRef<Map<Id, any>>(new Map());
 
   useEffect(() => {

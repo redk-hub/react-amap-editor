@@ -11,10 +11,11 @@ import {
   DeleteIcon,
   ShakeIcon,
 } from "@/components/icons";
-import type { ToolMode } from "@/types";
+import type { Menu, ToolMode } from "@/types";
 
 type Props = {
   mode: ToolMode;
+  tools?: Menu[];
   onModeChange: (m: ToolMode) => void;
   onUndo?: () => void;
   onRedo?: () => void;
@@ -38,6 +39,7 @@ const IconBtn: React.FC<React.ComponentProps<typeof Button>> = (p) => (
 
 const Toolbar: React.FC<Props> = ({
   mode,
+  tools,
   onModeChange,
   onUndo,
   onRedo,
@@ -57,6 +59,7 @@ const Toolbar: React.FC<Props> = ({
   return (
     <Space wrap>
       <Tooltip
+        visible={!tools || tools?.includes("draw")}
         title={
           <span>
             绘制多边形：依次点击地图添加顶点，支持吸附；
@@ -72,7 +75,10 @@ const Toolbar: React.FC<Props> = ({
         />
       </Tooltip>
 
-      <Tooltip title="编辑模式：点击进入编辑模式，可以修改已绘制的多边形">
+      <Tooltip
+        visible={!tools || tools?.includes("edit")}
+        title="编辑模式：点击进入编辑模式，可以修改已绘制的多边形"
+      >
         <IconBtn
           type={mode === "edit" ? "primary" : "default"}
           icon={<EditModeIcon />}
@@ -81,21 +87,33 @@ const Toolbar: React.FC<Props> = ({
         />
       </Tooltip>
 
-      <Tooltip title="撤销：回到上一步操作">
+      <Tooltip
+        visible={!tools || tools?.includes("undo")}
+        title="撤销：回到上一步操作"
+      >
         <IconBtn icon={<UndoIcon />} onClick={onUndo} disabled={disabledUndo} />
       </Tooltip>
-      <Tooltip title="重做：恢复被撤销的操作">
+      <Tooltip
+        visible={!tools || tools?.includes("redo")}
+        title="重做：恢复被撤销的操作"
+      >
         <IconBtn icon={<RedoIcon />} onClick={onRedo} disabled={disabledRedo} />
       </Tooltip>
 
-      <Tooltip title="合并：shift+鼠标左键单击选中多个要素合并">
+      <Tooltip
+        visible={!tools || tools?.includes("merge")}
+        title="合并：shift+鼠标左键单击选中多个要素合并"
+      >
         <IconBtn
           icon={<MergeIcon />}
           onClick={onMerge}
           disabled={disabledMerge}
         />
       </Tooltip>
-      <Tooltip title="裁切：选中要素，绘制裁切线，双击结束开始裁切">
+      <Tooltip
+        visible={!tools || tools?.includes("clip")}
+        title="裁切：选中要素，绘制裁切线，双击结束开始裁切"
+      >
         <IconBtn
           icon={<ScissorIcon />}
           onClick={onClip}
@@ -103,7 +121,10 @@ const Toolbar: React.FC<Props> = ({
         />
       </Tooltip>
 
-      <Tooltip title="摇一摇：选中多边形自动吸附到周边多边形的边或顶点（10px临界值）">
+      <Tooltip
+        visible={!tools || tools?.includes("shake")}
+        title="摇一摇：选中多边形自动吸附到周边多边形的边或顶点（10px临界值）"
+      >
         <IconBtn
           icon={<ShakeIcon />}
           onClick={onShake}
@@ -111,7 +132,10 @@ const Toolbar: React.FC<Props> = ({
         />
       </Tooltip>
 
-      <Tooltip title="选中要素，点击删除">
+      <Tooltip
+        visible={!tools || tools?.includes("delete")}
+        title="选中要素，点击删除"
+      >
         <IconBtn
           icon={<DeleteIcon />}
           onClick={onDelete}

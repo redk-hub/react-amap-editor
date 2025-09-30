@@ -13,6 +13,18 @@ export type Feature<T extends Geometry> = Omit<TurfFeature<T>, "id"> & {
 
 export type DrawMode = "point" | "line" | "polygon" | "browse";
 
+export type Menu =
+  | "draw"
+  | "edit"
+  | "clip"
+  | "merge"
+  | "shake"
+  | "delete"
+  | "undo"
+  | "redo"
+  | "import"
+  | "export";
+
 export interface AMapEditorRef {
   getCurrentState: () => { operate: string; feature: Polygon }[];
 }
@@ -21,10 +33,14 @@ export interface AMapEditorProps {
   className?: string;
   style?: React.CSSProperties;
   amapKey: string;
+  center?: Position;
+  zoom?: number;
+  mapStyle?: string;
   bbox?: Position[][][] | Position[][] | Position[];
   features?: Polygon[];
   selectedIds?: Id[];
   inactiveOnClickEmpty?: boolean;
+  tools?: Menu[];
   onSelect?: (ids: Id[]) => void;
   onMapReady?: (map: any) => void;
 }

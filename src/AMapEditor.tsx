@@ -6,6 +6,7 @@ import {
   forwardRef,
   useImperativeHandle,
 } from "react";
+
 import MapContainer from "@/components/MapContainer";
 import Toolbar from "@/components/Toolbar";
 import ImportButton from "@/components/ImportButton";
@@ -48,10 +49,14 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
       amapKey,
       className,
       style,
+      center,
+      zoom,
+      mapStyle,
       bbox,
       features,
       selectedIds: propsSelectedIds,
       inactiveOnClickEmpty = true,
+      tools,
       onSelect,
       onMapReady,
     } = props;
@@ -321,6 +326,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
           <div className="editor-logo">AMap GIS Editor</div>
           <Toolbar
             mode={activeMode}
+            tools={tools}
             onModeChange={setActiveMode}
             onUndo={!disableUndo ? undo : undefined}
             onRedo={!disableRedo ? redo : undefined}
@@ -348,12 +354,19 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
             }
           />
           <div className="editor-batch-wrap">
-            <ImportButton onImport={onImport} />
-            <ExportButton polygons={polygons} selectedIds={selectedIds} />
+            {(!tools || tools?.includes("import")) && (
+              <ImportButton onImport={onImport} />
+            )}
+            {(!tools || tools?.includes("export")) && (
+              <ExportButton polygons={polygons} selectedIds={selectedIds} />
+            )}
           </div>
         </div>
         <MapContainer
           amapKey={amapKey}
+          center={center}
+          zoom={zoom}
+          mapStyle={mapStyle}
           mode={activeMode}
           polygons={polygons}
           selectedIds={selectedIds}
