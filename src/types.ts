@@ -24,7 +24,9 @@ export interface AMapEditorProps {
   bbox?: Position[][][] | Position[][] | Position[];
   features?: Polygon[];
   selectedIds?: Id[];
+  inactiveOnClickEmpty?: boolean;
   onSelect?: (ids: Id[]) => void;
+  onMapReady?: (map: any) => void;
 }
 
 export type ToolMode = "browse" | "draw" | "clip" | "merge" | "edit";

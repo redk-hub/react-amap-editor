@@ -3,16 +3,18 @@ import type { Id, Polygon } from "@/types";
 interface BrowseModeProps {
   map: any;
   AMap: any;
+  inactiveOnClickEmpty?: boolean;
   onSelectIds: (ids: Id[]) => void;
 }
 
 export const BrowseMode: React.FC<BrowseModeProps> = ({
   map,
   AMap,
+  inactiveOnClickEmpty, // 是否点击空白处取消选择
   onSelectIds,
 }) => {
   useEffect(() => {
-    if (!map) return;
+    if (!map || !inactiveOnClickEmpty) return;
     // 点击地图空白处取消选择
     const handleMapClick = (e) => {
       const clickLngLat = e.lnglat; // 点击点的经纬度
@@ -30,7 +32,7 @@ export const BrowseMode: React.FC<BrowseModeProps> = ({
     return () => {
       map.off("click", handleMapClick);
     };
-  }, [map]);
+  }, [map, inactiveOnClickEmpty]);
 
   return null;
 };

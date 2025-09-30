@@ -1,15 +1,3 @@
-export const DownloadIcon = () => (
-  <svg
-    viewBox="0 0 24 24"
-    width="1.5em"
-    height="1.5em"
-    fill="currentColor"
-    style={{ transform: "translateY(2px)" }}
-  >
-    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
-  </svg>
-);
-
 export const ScissorIcon = () => (
   <svg
     viewBox="0 0 24 24"

@@ -1,6 +1,5 @@
 import React from "react";
 import { Button, Upload } from "@/components/base";
-import { DownloadIcon } from "@/components/icons";
 import type { Polygon } from "@/types";
 
 type Props = {
@@ -74,7 +73,7 @@ const ImportButton: React.FC<Props> = ({ onImport }) => {
       beforeUpload={beforeUpload}
       accept=".geojson,.json,application/geo+json"
     >
-      <Button icon={<DownloadIcon />}>导入</Button>
+      <Button>导入</Button>
     </Upload>
   );
 };

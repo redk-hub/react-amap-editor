@@ -9,6 +9,7 @@ import {
 import MapContainer from "@/components/MapContainer";
 import Toolbar from "@/components/Toolbar";
 import ImportButton from "@/components/ImportButton";
+import ExportButton from "@/components/ExportButton";
 import type {
   ToolMode,
   Id,
@@ -19,7 +20,7 @@ import type {
 } from "@/types";
 import useHistory from "@/hooks/useHistory";
 import * as turf from "@turf/turf";
-import { processPolygons, coordsToMultiPolygon } from "@/utils/geo";
+import { processPolygons, coordsToMultiPolygon, bboxClip } from "@/utils/geo";
 import type { LineString, MultiPolygon, Polygon, Position } from "geojson";
 
 import { splitMultiPolygonByLine } from "@/utils/geo";
@@ -50,7 +51,9 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
       bbox,
       features,
       selectedIds: propsSelectedIds,
+      inactiveOnClickEmpty = true,
       onSelect,
+      onMapReady,
     } = props;
     const bus = useEventBus();
     const [polygons, setPolygons] = useState<Feature<MultiPolygon>[]>([]);
@@ -128,12 +131,14 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
     };
 
     const onDrawFinish = (feature: PolygonFeature) => {
-      setPolygons([...polygons, feature]);
+      const clipped = bboxClip(feature, boxFeature);
+      debugger;
+      setPolygons([...polygons, clipped]);
       pushHistory({
-        annotation: `draw finish ${feature.id}`,
-        features: [feature],
+        annotation: `draw finish ${clipped.id}`,
+        features: [clipped],
       });
-      console.log("draw finish", feature);
+      console.log("draw finish", clipped);
     };
 
     const onEditPolygon = (id: string, coordinates: Position[][][]) => {
@@ -302,6 +307,11 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
       }
     };
 
+    const onMapLoaded = (map) => {
+      setMap(map);
+      onMapReady?.(map);
+    };
+
     return (
       <div
         className={className}
@@ -339,20 +349,22 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
           />
           <div className="editor-batch-wrap">
             <ImportButton onImport={onImport} />
+            <ExportButton polygons={polygons} selectedIds={selectedIds} />
           </div>
         </div>
         <MapContainer
           amapKey={amapKey}
           mode={activeMode}
           polygons={polygons}
+          selectedIds={selectedIds}
           boxFeature={boxFeature}
+          inactiveOnClickEmpty={inactiveOnClickEmpty}
           onDrawFinish={onDrawFinish}
           onEditPolygon={onEditPolygon}
           pushHistory={pushHistory}
           onStartClip={onStartClip}
-          selectedIds={selectedIds}
           onSelectIds={onSelectIds}
-          onMapReady={setMap}
+          onMapReady={onMapLoaded}
         />
       </div>
     );

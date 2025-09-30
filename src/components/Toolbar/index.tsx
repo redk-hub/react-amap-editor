@@ -103,19 +103,19 @@ const Toolbar: React.FC<Props> = ({
         />
       </Tooltip>
 
-      <Tooltip title="选中要素，点击删除">
-        <IconBtn
-          icon={<DeleteIcon />}
-          onClick={onDelete}
-          disabled={disabledDelete}
-        />
-      </Tooltip>
-
       <Tooltip title="摇一摇：选中多边形自动吸附到周边多边形的边或顶点（10px临界值）">
         <IconBtn
           icon={<ShakeIcon />}
           onClick={onShake}
           disabled={disabledShake}
+        />
+      </Tooltip>
+
+      <Tooltip title="选中要素，点击删除">
+        <IconBtn
+          icon={<DeleteIcon />}
+          onClick={onDelete}
+          disabled={disabledDelete}
         />
       </Tooltip>
     </Space>

@@ -2,7 +2,11 @@ import React, { useEffect, useRef, memo } from "react";
 import type { Id, Polygon } from "@/types";
 import * as turf from "@turf/turf";
 import type { Position } from "geojson";
-import { amapPathToGeoJSONCoords, isPointInPolygon } from "@/utils/geo";
+import {
+  amapPathToGeoJSONCoords,
+  isPointInPolygon,
+  bboxClip,
+} from "@/utils/geo";
 import { POLYGON_OPTIONS } from "@/components/MapContainer/index";
 interface BrowseModeProps {
   map: any;
@@ -63,32 +67,21 @@ export const EditMode: React.FC<BrowseModeProps> = memo(
 
         const coords = amapPathToGeoJSONCoords(e.target.getPath());
         // 检查移动的点是否在bbox内
-        if (!isPointInPolygon(movedPoint, boxFeature)) {
-          const clipped = turf.intersect(
-            turf.featureCollection([turf.multiPolygon(coords), boxFeature])
-          );
-          e.target.setPath(clipped.geometry.coordinates);
-          editor.current.setTarget(e.target);
-          pushHistory({
-            features: [
-              {
-                ...polygons.find((item) => item.id === selectedIds[0]),
-                geometry: clipped.geometry,
-              },
-            ],
-            annotation: `edit`,
-          });
-        } else {
-          pushHistory({
-            features: [
-              {
-                ...polygons.find((item) => item.id === selectedIds[0]),
-                geometry: { type: "MultiPolygon", coordinates: coords },
-              },
-            ],
-            annotation: `edit`,
-          });
-        }
+        const clipped = bboxClip(
+          turf.multiPolygon(coords) as Polygon,
+          boxFeature
+        );
+        e.target.setPath(clipped.geometry.coordinates);
+        editor.current.setTarget(e.target);
+        pushHistory({
+          features: [
+            {
+              ...polygons.find((item) => item.id === selectedIds[0]),
+              geometry: clipped.geometry,
+            },
+          ],
+          annotation: `edit`,
+        });
       };
 
       // 监听编辑完成事件

@@ -188,5 +188,20 @@ export function isPointInPolygon(
 }
 
 /**
- * 找到点离面最近的一条边
+ * 用boxFeature裁切feature
+ * @param feature
+ * @param boxFeature
+ * @returns
  */
+export function bboxClip(feature: Polygon, boxFeature: Polygon): Polygon {
+  const clipped = boxFeature
+    ? turf.intersect(turf.featureCollection([feature, boxFeature]))
+    : feature;
+  if (clipped.geometry.type === "Polygon") {
+    clipped.geometry = {
+      type: "MultiPolygon",
+      coordinates: [clipped.geometry.coordinates],
+    };
+  }
+  return { ...feature, geometry: clipped.geometry } as Polygon;
+}

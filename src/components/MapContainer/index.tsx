@@ -30,6 +30,7 @@ interface Props {
   polygons: Polygon[];
   selectedIds: Id[];
   boxFeature?: Polygon;
+  inactiveOnClickEmpty?: boolean;
   onSelectIds: (ids: Id[]) => void;
   pushHistory: (behave: Behave) => void;
   onDrawFinish: (feature: Polygon) => void;
@@ -44,6 +45,7 @@ const MapContainer: React.FC<Props> = ({
   polygons,
   selectedIds,
   boxFeature,
+  inactiveOnClickEmpty,
   onSelectIds,
   pushHistory,
   onDrawFinish,
@@ -92,9 +94,16 @@ const MapContainer: React.FC<Props> = ({
       if (!id || mode == "draw") return;
       const polys = map.getAllOverlays("polygon");
       const clickPolys = polys.filter(
-        (item) => !item.getExtData()?.disabled && item.contains(e.lnglat)
+        (item) =>
+          !item.getExtData()?.disabled &&
+          !item.getExtData()?.readonly &&
+          item.contains(e.lnglat)
       );
       const clickIds = clickPolys.map((item) => item.getExtData()?.id);
+      if (!inactiveOnClickEmpty && clickIds.length === 0) {
+        // 如果禁止点击空白处取消选择，且没有选中任何多边形，不做任何操作
+        return;
+      }
       if (e.originEvent.shiftKey) {
         // shift + 点击实现多选
         const existSet = new Set(selectedIds);
@@ -122,7 +131,7 @@ const MapContainer: React.FC<Props> = ({
           ...(selectedIds.includes(p.id)
             ? POLYGON_OPTIONS.selOptions
             : POLYGON_OPTIONS.defaultOptions),
-          extData: { id: p.id },
+          extData: { id: p.id, ...(p.properties || {}) },
         });
         poly.on("click", handleClick);
         map.add(poly);
@@ -162,13 +171,18 @@ const MapContainer: React.FC<Props> = ({
         if (rec.clickHandler) rec.polygon.off("click", rec.clickHandler);
       }
     };
-  }, [map, AMap, mode, polygons, selectedIds]);
+  }, [map, AMap, mode, polygons, selectedIds, inactiveOnClickEmpty]);
 
   return (
     <>
       <div id={CONTAINER_ID} className="map-root" />
       {mode == "browse" && (
-        <BrowseMode map={map} AMap={AMap} onSelectIds={onSelectIds} />
+        <BrowseMode
+          map={map}
+          AMap={AMap}
+          inactiveOnClickEmpty={inactiveOnClickEmpty}
+          onSelectIds={onSelectIds}
+        />
       )}
       {mode == "edit" && (
         <EditMode
