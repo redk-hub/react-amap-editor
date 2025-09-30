@@ -137,7 +137,6 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
 
     const onDrawFinish = (feature: PolygonFeature) => {
       const clipped = bboxClip(feature, boxFeature);
-      debugger;
       setPolygons([...polygons, clipped]);
       pushHistory({
         annotation: `draw finish ${clipped.id}`,
@@ -147,7 +146,6 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
     };
 
     const onEditPolygon = (id: string, coordinates: Position[][][]) => {
-      debugger;
       setActiveMode("browse");
       // pushHistory({
       //   features: polygons.filter((item) => item.id == id),
@@ -227,7 +225,6 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
 
         next.push(cleaned);
         setPolygons(next);
-        debugger;
         pushHistory({
           annotation: `add base merge ${selectedIds.join(",")}`,
           features: selectedPolygons,
