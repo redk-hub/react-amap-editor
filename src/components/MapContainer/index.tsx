@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import useAmap from "@/hooks/useAmap";
 import { DrawMode, BrowseMode, ClipMode, EditMode } from "../MapModes";
-
+import * as turf from "@turf/turf";
 import type { Polygon, Feature, Id, ToolMode, Behave } from "@/types";
 import type { LineString, Position } from "geojson";
 
@@ -34,6 +34,7 @@ interface Props {
   selectedIds: Id[];
   boxFeature?: Polygon;
   inactiveOnClickEmpty?: boolean;
+  nameSetting?: { field: string; style: any };
   onSelectIds: (ids: Id[]) => void;
   pushHistory: (behave: Behave) => void;
   onDrawFinish: (feature: Polygon) => void;
@@ -52,6 +53,7 @@ const MapContainer: React.FC<Props> = ({
   selectedIds,
   boxFeature,
   inactiveOnClickEmpty,
+  nameSetting,
   onSelectIds,
   pushHistory,
   onDrawFinish,
@@ -66,6 +68,7 @@ const MapContainer: React.FC<Props> = ({
     mapStyle,
   });
   const overlays = useRef<Map<Id, any>>(new Map());
+  const namesLayer = useRef<any>(null);
 
   useEffect(() => {
     if (map && onMapReady) {
@@ -142,7 +145,7 @@ const MapContainer: React.FC<Props> = ({
           ...(selectedIds.includes(p.id)
             ? POLYGON_OPTIONS.selOptions
             : POLYGON_OPTIONS.defaultOptions),
-          extData: { id: p.id, ...(p.properties || {}) },
+          extData: { ...(p.properties || {}), id: p.id },
         });
         poly.on("click", handleClick);
         map.add(poly);
@@ -176,13 +179,49 @@ const MapContainer: React.FC<Props> = ({
       }
     }
 
+    if (nameSetting) {
+      addPolygonName(polygons);
+    }
+
     // Cleanup
     return () => {
       for (const [id, rec] of overlays.current) {
         if (rec.clickHandler) rec.polygon.off("click", rec.clickHandler);
       }
+      namesLayer.current?.clear();
     };
   }, [map, AMap, mode, polygons, selectedIds, inactiveOnClickEmpty]);
+
+  const addPolygonName = (polygons) => {
+    if (!namesLayer.current) {
+      namesLayer.current = new AMap.LabelsLayer({
+        collision: true, // 是否避让
+        opacity: 1,
+        zIndex: 110,
+        allowCollision: false,
+      });
+      map.add(namesLayer.current);
+    }
+    const markers = polygons.map((feature) => {
+      if (!feature?.geometry) return;
+      const name = feature.properties?.[nameSetting.field || "name"];
+      const style = nameSetting.style || { fontSize: 12, fillColor: "#fff" };
+      const centerpt = turf.centroid(feature);
+      const lnglat = centerpt.geometry.coordinates;
+
+      const text = new AMap.LabelMarker({
+        position: lnglat as AMap.LngLatLike,
+        text: {
+          content: name,
+          direction: "center",
+          offset: [0, 0], // 调整文字位置
+          style,
+        },
+      });
+      return text;
+    });
+    namesLayer.current.add(markers);
+  };
 
   return (
     <>

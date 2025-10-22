@@ -43,7 +43,7 @@ export default function useAmap(
           viewMode: "3D",
           center: center || [113.700141, 34.826034],
           doubleClickZoom: false,
-          mapStyle: mapStyle || "amap://styles/whitesmoke",
+          mapStyle: mapStyle, //"amap://styles/whitesmoke"
         });
         map.addControl(new AMapNS.Scale());
         map.addControl(new AMapNS.ToolBar());

@@ -187,6 +187,40 @@ export function isPointInPolygon(
   return turf.booleanPointInPolygon(pt, boxFeature);
 }
 
+/** 提取所有点坐标 */
+function getAllPoints(geo) {
+  if (geo.type === "Feature") return getAllPoints(geo.geometry);
+  const coords = [];
+  if (geo.type === "Polygon") {
+    geo.coordinates.forEach((r) => r.forEach((c) => coords.push(c)));
+  } else if (geo.type === "MultiPolygon") {
+    geo.coordinates.forEach((p) =>
+      p.forEach((r) => r.forEach((c) => coords.push(c)))
+    );
+  }
+  return coords;
+}
+
+/**
+ * 判断 polygonA 是否包含 polygonB
+ * （边界接触也算包含）
+ * 支持 Polygon 和 MultiPolygon
+ */
+export function polygonContainsAllowBoundary(a, b) {
+  // 1. 所有顶点都在 a 内或边界上
+  const points = getAllPoints(b);
+  for (const pt of points) {
+    const inside = turf.booleanPointInPolygon(turf.point(pt), a, {
+      ignoreBoundary: false,
+    });
+    if (!inside) return false;
+  }
+
+  // 2. 确认 b 不在 a 外面（防止自相交的情况）
+  const intersects = turf.booleanIntersects(a, b);
+  return intersects; // 有交集且所有点都在内 => 包含
+}
+
 /**
  * 用boxFeature裁切feature
  * @param feature

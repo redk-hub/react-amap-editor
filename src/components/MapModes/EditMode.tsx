@@ -32,7 +32,10 @@ export const EditMode: React.FC<BrowseModeProps> = memo(
 
     useEffect(() => {
       return () => {
-        editor.current?.close();
+        debugger;
+        if (editor.current.isOpenStatus) {
+          editor.current?.close();
+        }
       };
     }, []);
 
@@ -44,7 +47,6 @@ export const EditMode: React.FC<BrowseModeProps> = memo(
       //   editor.current.close();
       //   editor.current = null;
       // }
-
       const overlays = map.getAllOverlays("polygon");
 
       const selectedPoly = overlays.find(
@@ -66,13 +68,9 @@ export const EditMode: React.FC<BrowseModeProps> = memo(
         const movedPoint = [e.lnglat.lng, e.lnglat.lat];
 
         const coords = amapPathToGeoJSONCoords(e.target.getPath());
+        const curPoly = turf.multiPolygon(coords) as Polygon;
         // 检查移动的点是否在bbox内
-        const clipped = bboxClip(
-          turf.multiPolygon(coords) as Polygon,
-          boxFeature
-        );
-        e.target.setPath(clipped.geometry.coordinates);
-        editor.current.setTarget(e.target);
+        const clipped = bboxClip(curPoly, boxFeature);
         pushHistory({
           features: [
             {
@@ -82,9 +80,16 @@ export const EditMode: React.FC<BrowseModeProps> = memo(
           ],
           annotation: `edit`,
         });
+        // 如果不在边界内，则结束编辑
+        if (!isPointInPolygon(movedPoint, boxFeature)) {
+          // editor.current.close();
+          e.target.setPath(clipped.geometry.coordinates);
+          editor.current.setTarget(e.target);
+        }
       };
 
       // 监听编辑完成事件
+      // TODO 会触发两次，组件销毁时会触发一次
       const handleEnd = () => {
         const newPath = selectedPoly.getPath();
         const newCoords = amapPathToGeoJSONCoords(newPath);

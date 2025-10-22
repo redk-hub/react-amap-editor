@@ -21,11 +21,16 @@ import type {
 } from "@/types";
 import useHistory from "@/hooks/useHistory";
 import * as turf from "@turf/turf";
-import { processPolygons, coordsToMultiPolygon, bboxClip } from "@/utils/geo";
+import {
+  processPolygons,
+  coordsToMultiPolygon,
+  bboxClip,
+  splitMultiPolygonByLine,
+  polygonContainsAllowBoundary,
+} from "@/utils/geo";
 import type { LineString, MultiPolygon, Polygon, Position } from "geojson";
-
-import { splitMultiPolygonByLine } from "@/utils/geo";
 import { shakePolygon } from "@/utils/shake";
+import { Modal } from "@/components/base";
 
 export interface AMapEditorRef {
   history: {
@@ -33,6 +38,10 @@ export interface AMapEditorRef {
     initial: (features: PolygonFeature[], clear: boolean) => void;
     clear: () => void;
   };
+  polygons: Feature<MultiPolygon>[];
+  map: any;
+  mode: ToolMode;
+  setMode: (mode: ToolMode) => void;
 }
 
 const AMapEditor = forwardRef<AMapEditorRef, AMapEditorProps>((props, ref) => {
@@ -57,8 +66,11 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
       selectedIds: propsSelectedIds,
       inactiveOnClickEmpty = true,
       tools,
+      isContinuousDraw = true,
+      nameSetting,
       onSelect,
       onMapReady,
+      onChange,
     } = props;
     const bus = useEventBus();
     const [polygons, setPolygons] = useState<Feature<MultiPolygon>[]>([]);
@@ -83,6 +95,10 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
         initial,
         clear: clearHistory,
       },
+      polygons,
+      map,
+      mode: activeMode,
+      setMode: setActiveMode,
     }));
 
     const boxFeature = useMemo(() => {
@@ -92,7 +108,22 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
 
     useEffect(() => {
       if (features) {
-        setPolygons(features);
+        const newFeatures = features.map((item) => {
+          if (item.geometry.type === "Polygon") {
+            return {
+              ...item,
+              geometry: {
+                type: "MultiPolygon",
+                coordinates: [item.geometry.coordinates],
+              },
+            };
+          } else {
+            return item;
+          }
+        });
+        setPolygons(newFeatures as PolygonFeature[]);
+      } else {
+        setPolygons([]);
       }
     }, [features]);
 
@@ -135,27 +166,74 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
       }
     };
 
+    // 如果boxFeature存在，且当前多边形超出边界，提示是否进行裁切
+    const handleOutsideBox = (
+      feature: PolygonFeature
+    ): Promise<PolygonFeature> => {
+      return new Promise((resolve) => {
+        if (!boxFeature) resolve(feature);
+        const isOutside = !polygonContainsAllowBoundary(boxFeature, feature);
+        debugger;
+        if (!isOutside) {
+          resolve(feature);
+        } else {
+          Modal.confirm({
+            title: "多边形超出边界",
+            content: "当前多边形超出设定边界，是否进行裁切？",
+            onOk: () => {
+              const clipped = bboxClip(feature, boxFeature);
+              resolve(clipped);
+            },
+            onCancel: () => resolve(feature),
+          });
+        }
+      });
+    };
+
     const onDrawFinish = (feature: PolygonFeature) => {
       const clipped = bboxClip(feature, boxFeature);
       setPolygons([...polygons, clipped]);
+      if (!isContinuousDraw) {
+        setActiveMode("browse");
+        onSelectIds([clipped.id]);
+      }
       pushHistory({
         annotation: `draw finish ${clipped.id}`,
         features: [clipped],
       });
-      console.log("draw finish", clipped);
+      onChange?.({
+        type: "draw",
+        beforeChanges: [],
+        afterChanges: [clipped],
+      });
     };
 
-    const onEditPolygon = (id: string, coordinates: Position[][][]) => {
+    const onEditPolygon = async (id: string, coordinates: Position[][][]) => {
       setActiveMode("browse");
+      const editPoly = turf.multiPolygon(coordinates) as PolygonFeature;
+      const poly = await handleOutsideBox(editPoly);
       // pushHistory({
       //   features: polygons.filter((item) => item.id == id),
       //   annotation: "add base",
       //   isBase: true,
       // });
       const newPolys = polygons.map((p) =>
-        p.id === id ? { ...p, geometry: { ...p.geometry, coordinates } } : p
+        p.id === id
+          ? {
+              ...p,
+              geometry: {
+                ...p.geometry,
+                coordinates: poly.geometry.coordinates,
+              },
+            }
+          : p
       );
       setPolygons(newPolys);
+      onChange?.({
+        type: "edit",
+        beforeChanges: polygons.filter((item) => item.id == id),
+        afterChanges: newPolys.filter((item) => item.id == id),
+      });
       // pushHistory({
       //   annotation: `edit ${id}`,
       //   features: newPolys.filter((p) => p.id == id),
@@ -195,6 +273,11 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
       pushHistory({
         annotation: `clip ${feature.id}`,
         features: [{ ...feature, geometry: null }, ...polys],
+      });
+      onChange?.({
+        type: "clip",
+        beforeChanges: [feature],
+        afterChanges: polys,
       });
     };
 
@@ -320,7 +403,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
         style={{ position: "relative", ...(style || {}) }}
       >
         <div className="editor-header">
-          <div className="editor-logo">AMap GIS Editor</div>
+          {/* <div className="editor-logo">AMap Polygon Editor</div> */}
           <Toolbar
             mode={activeMode}
             tools={tools}
@@ -369,6 +452,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
           selectedIds={selectedIds}
           boxFeature={boxFeature}
           inactiveOnClickEmpty={inactiveOnClickEmpty}
+          nameSetting={nameSetting}
           onDrawFinish={onDrawFinish}
           onEditPolygon={onEditPolygon}
           pushHistory={pushHistory}

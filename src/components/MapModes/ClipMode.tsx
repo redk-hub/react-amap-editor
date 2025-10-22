@@ -111,6 +111,7 @@ export const ClipMode: React.FC<ClipModeProps> = ({
     };
 
     const handleDblClick = () => {
+      console.log("dblclick finnish clip");
       finishDraw();
     };
 

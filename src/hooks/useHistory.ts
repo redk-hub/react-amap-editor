@@ -308,6 +308,7 @@ export default function useHistory<T = Polygon[]>(opt: Opts<T>) {
       ...new Set(
         modifies.current
           .slice(0, modifyIndex.current + 1)
+          .filter((item) => !item.startsWith("temp_"))
           .reduce((acc, cur) => {
             return acc.concat(cur.split("#"));
           }, [])
@@ -327,20 +328,22 @@ export default function useHistory<T = Polygon[]>(opt: Opts<T>) {
       // 如果基类没有经纬度，当前有经纬度，表示新增
       // 如果基类和当前都有经纬度，表示修改
       if (
-        !stackItems[0]?.feature?.geometry?.coordinates?.length &&
-        stackItems[stackIndex]?.feature?.geometry?.coordinates?.length
+        !stackItems[0]?.feature?.geometry &&
+        !!stackItems[stackIndex]?.feature?.geometry
       ) {
         operate = "add";
       } else if (
-        stackItems[0]?.feature?.geometry?.coordinates?.length &&
-        stackItems[stackIndex]?.feature?.geometry?.coordinates?.length
+        !!stackItems[0]?.feature?.geometry &&
+        !!stackItems[stackIndex]?.feature?.geometry
       ) {
         operate = "update";
       } else if (
-        stackItems[0]?.feature?.geometry?.coordinates?.length &&
-        !stackItems[stackIndex]?.feature?.geometry?.coordinates?.length
+        !!stackItems[0]?.feature?.geometry &&
+        !stackItems[stackIndex]?.feature?.geometry
       ) {
         operate = "delete";
+      } else {
+        operate = "";
       }
 
       if (operate) {

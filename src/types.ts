@@ -29,6 +29,12 @@ export interface AMapEditorRef {
   getCurrentState: () => { operate: string; feature: Polygon }[];
 }
 
+export interface PolygonChange {
+  type: Menu;
+  beforeChanges: Polygon[];
+  afterChanges: Polygon[];
+}
+
 export interface AMapEditorProps {
   className?: string;
   style?: React.CSSProperties;
@@ -37,12 +43,15 @@ export interface AMapEditorProps {
   zoom?: number;
   mapStyle?: string;
   bbox?: Position[][][] | Position[][] | Position[];
-  features?: Polygon[];
+  features?: TurfFeature<TurfPolygon>[] | TurfFeature<TurfMultiPolygon>[];
   selectedIds?: Id[];
   inactiveOnClickEmpty?: boolean;
   tools?: Menu[];
+  isContinuousDraw?: boolean; // 绘制完成后是否继续保持绘制模式
+  nameSetting?: { field: string; style: any }; // polygon名称属性设置
   onSelect?: (ids: Id[]) => void;
   onMapReady?: (map: any) => void;
+  onChange?: (e: PolygonChange) => void;
 }
 
 export type ToolMode = "browse" | "draw" | "clip" | "merge" | "edit";

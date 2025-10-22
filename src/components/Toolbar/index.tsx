@@ -123,7 +123,7 @@ const Toolbar: React.FC<Props> = ({
 
       <Tooltip
         visible={!tools || tools?.includes("shake")}
-        title="摇一摇：选中多边形自动吸附到周边多边形的边或顶点（10px临界值）"
+        title="摇一摇：选中多边形自动吸附到周边多边形的边或顶点（20px临界值）"
       >
         <IconBtn
           icon={<ShakeIcon />}
