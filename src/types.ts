@@ -8,8 +8,8 @@ import type {
 
 declare global {
   interface Window {
-    map: any;
-    editorMode: string;
+    map: any; // 高德地图实例
+    editorMode: string; // 编辑器当前模式
   }
 }
 
@@ -17,8 +17,6 @@ declare global {
 export type Feature<T extends Geometry> = Omit<TurfFeature<T>, "id"> & {
   id: string;
 };
-
-export type DrawMode = "point" | "line" | "polygon" | "browse";
 
 export type Menu =
   | "draw"
@@ -43,22 +41,22 @@ export interface PolygonChange {
 }
 
 export interface AMapEditorProps {
-  className?: string;
-  style?: React.CSSProperties;
-  amapKey: string;
-  center?: Position;
-  zoom?: number;
-  mapStyle?: string;
-  bbox?: Position[][][] | Position[][] | Position[];
+  className?: string; // 容器类名
+  style?: React.CSSProperties; // 容器样式
+  amapKey: string; // 高德地图key
+  center?: Position; // 地图中心点
+  zoom?: number; // 地图缩放级别
+  mapStyle?: string; // 高德地图styleId
+  bbox?: Position[][][] | Position[][] | Position[]; // 限制绘制区域边界
   features?: TurfFeature<TurfPolygon>[] | TurfFeature<TurfMultiPolygon>[];
   selectedIds?: Id[];
-  inactiveOnClickEmpty?: boolean;
-  tools?: Menu[];
+  inactiveOnClickEmpty?: boolean; // 是否点击空白处取消选中，默认true
+  tools?: Menu[]; // 不设置则显示全部工具
   isContinuousDraw?: boolean; // 绘制完成后是否继续保持绘制模式
-  nameSetting?: { field: string; style: any }; // polygon名称属性设置
+  nameSetting?: { field: string; style: any }; // polygon名称属性设置，不设置则不显示，field是需要显示的字段名，确保properties里存在，style.eg: { fontSize: 12, fillColor: "#fff" }
   onSelect?: (ids: Id[]) => void;
   onMapReady?: (map: any) => void;
-  onChange?: (e: PolygonChange) => void;
+  onChange?: (e: PolygonChange) => void; // 多边形变化回调
 }
 
 export type ToolMode = "browse" | "draw" | "clip" | "merge" | "edit";

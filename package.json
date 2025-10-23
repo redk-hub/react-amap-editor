@@ -12,8 +12,7 @@
   "scripts": {
     "dev": "vite --config vite.config.js",
     "build": "npm run build:lib",
-    "build:lib": "tsc && vite build --config vite.lib.config.js",
-    "prepublishOnly": "npm run build:lib"
+    "build:lib": "vite build --config vite.lib.config.js && tsc --emitDeclarationOnly && tsc-alias"
   },
   "dependencies": {
     "@amap/amap-jsapi-loader": "^1.0.1",
@@ -28,6 +27,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "terser": "^5.44.0",
+    "tsc-alias": "^1.8.16",
     "typescript": "^5.2.2",
     "vite": "^5.0.0"
   },
