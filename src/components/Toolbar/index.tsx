@@ -17,6 +17,7 @@ type Props = {
   mode: ToolMode;
   tools?: Menu[];
   onModeChange: (m: ToolMode) => void;
+  disabledDraw?: boolean;
   onUndo?: () => void;
   onRedo?: () => void;
   disabledUndo?: boolean;
@@ -41,6 +42,7 @@ const Toolbar: React.FC<Props> = ({
   mode,
   tools,
   onModeChange,
+  disabledDraw,
   onUndo,
   onRedo,
   disabledUndo,
@@ -72,6 +74,7 @@ const Toolbar: React.FC<Props> = ({
           type={mode === "draw" ? "primary" : "default"}
           icon={<EditIcon />}
           onClick={() => onModeChange(mode === "draw" ? "browse" : "draw")}
+          disabled={disabledDraw}
         />
       </Tooltip>
 

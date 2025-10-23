@@ -53,6 +53,7 @@ export interface AMapEditorProps {
   inactiveOnClickEmpty?: boolean; // 是否点击空白处取消选中，默认true
   tools?: Menu[]; // 不设置则显示全部工具
   isContinuousDraw?: boolean; // 绘制完成后是否继续保持绘制模式
+  disabledDraw?: boolean; // 是否禁用绘制功能
   nameSetting?: { field: string; style: any }; // polygon名称属性设置，不设置则不显示，field是需要显示的字段名，确保properties里存在，style.eg: { fontSize: 12, fillColor: "#fff" }
   onSelect?: (ids: Id[]) => void;
   onMapReady?: (map: any) => void;

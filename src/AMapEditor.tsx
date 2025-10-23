@@ -67,6 +67,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
       inactiveOnClickEmpty = true,
       tools,
       isContinuousDraw = true,
+      disabledDraw = false,
       nameSetting,
       onSelect,
       onMapReady,
@@ -412,6 +413,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
             mode={activeMode}
             tools={tools}
             onModeChange={changeMode}
+            disabledDraw={disabledDraw}
             onUndo={!disableUndo ? undo : undefined}
             onRedo={!disableRedo ? redo : undefined}
             disabledUndo={disableUndo}
