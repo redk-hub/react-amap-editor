@@ -2,6 +2,7 @@
 // Screen-pixel snapping utility against existing polygons' vertices and edges
 import type { Polygon } from "@/types";
 import type { Position } from "geojson";
+import * as turf from "@turf/turf";
 
 export type SnapTarget = {
   lnglat: Position;
@@ -41,9 +42,9 @@ export function getSnap(
     }
     if (!vertexPriority || !best) {
       // edges
-      for (let i = 0; i < coords.length; i++) {
+      for (let i = 0; i < coords.length - 1; i++) {
         const a = coords[i];
-        const b = coords[(i + 1) % coords.length];
+        const b = coords[i + 1];
         const snapOnSeg = nearestPointOnSegmentPx(map, a, b, ptPix);
         if (
           snapOnSeg &&
@@ -76,7 +77,10 @@ function nearestPointOnSegmentPx(
   if (len2 === 0) return null;
 
   let t = (wx * vx + wy * vy) / len2;
-  t = Math.max(0, Math.min(1, t));
+  const EPS = 1e-10;
+  // 修正浮点误差
+  if (t < EPS) t = 0;
+  else if (t > 1 - EPS) t = 1;
 
   const projX = ap.x + t * vx;
   const projY = ap.y + t * vy;
