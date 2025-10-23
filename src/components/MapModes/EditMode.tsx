@@ -29,12 +29,12 @@ export const EditMode: React.FC<BrowseModeProps> = memo(
     pushHistory,
   }) => {
     const editor = useRef<any>(null);
+    const prePath = useRef<any>(null);
 
     useEffect(() => {
       return () => {
-        debugger;
-        if (editor.current.isOpenStatus) {
-          editor.current?.close();
+        if (prePath.current) {
+          handleEnd();
         }
       };
     }, []);
@@ -60,7 +60,7 @@ export const EditMode: React.FC<BrowseModeProps> = memo(
         );
       }
 
-      const prePath = selectedPoly?.getPath();
+      prePath.current = selectedPoly?.getPath();
 
       // 监听编辑过程中的事件，检查是否超出边界
       const handleMove = (e: any) => {
@@ -83,27 +83,16 @@ export const EditMode: React.FC<BrowseModeProps> = memo(
         // 如果不在边界内，则结束编辑
         if (!isPointInPolygon(movedPoint, boxFeature)) {
           // editor.current.close();
-          e.target.setPath(clipped.geometry.coordinates);
-          editor.current.setTarget(e.target);
+          handleEnd();
+          // e.target.setPath(clipped.geometry.coordinates);
+          // editor.current.setTarget(e.target);
         }
-      };
-
-      // 监听编辑完成事件
-      // TODO 会触发两次，组件销毁时会触发一次
-      const handleEnd = () => {
-        const newPath = selectedPoly.getPath();
-        const newCoords = amapPathToGeoJSONCoords(newPath);
-        const preCoords = amapPathToGeoJSONCoords(prePath);
-        if (JSON.stringify(newCoords) === JSON.stringify(preCoords)) {
-          return;
-        }
-        onEditPolygon(selectedPoly.getExtData()?.id, newCoords);
       };
 
       const handleMapClick = (e) => {
         const clickLngLat = e.lnglat; // 点击点的经纬度
         if (!selectedPoly.contains(clickLngLat)) {
-          editor.current?.close();
+          handleEnd();
         }
       };
 
@@ -146,8 +135,6 @@ export const EditMode: React.FC<BrowseModeProps> = memo(
 
         // 监听移动和编辑完成事件
         editor.current.on("adjust", handleMove);
-        // editor.current.on("addnode", handleMove);
-        editor.current.on("end", handleEnd);
         map.on("click", handleMapClick);
       }
 
@@ -164,6 +151,23 @@ export const EditMode: React.FC<BrowseModeProps> = memo(
         }
       };
     }, [map, polygons, selectedIds, boxFeature]); // 添加bbox作为依赖
+
+    const handleEnd = () => {
+      editor.current?.close();
+      const overlays = map.getAllOverlays("polygon");
+
+      const selectedPoly = overlays.find(
+        (item) => item.getExtData()?.id === selectedIds[0]
+      );
+      const newPath = selectedPoly.getPath();
+      const newCoords = amapPathToGeoJSONCoords(newPath);
+      const preCoords = amapPathToGeoJSONCoords(prePath.current);
+      prePath.current = null;
+      if (JSON.stringify(newCoords) === JSON.stringify(preCoords)) {
+        return;
+      }
+      onEditPolygon(selectedPoly.getExtData()?.id, newCoords);
+    };
 
     return null;
   }

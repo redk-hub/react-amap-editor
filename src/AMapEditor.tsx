@@ -98,7 +98,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
       polygons,
       map,
       mode: activeMode,
-      setMode: setActiveMode,
+      setMode: changeMode,
     }));
 
     const boxFeature = useMemo(() => {
@@ -158,6 +158,11 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
       };
     }, []);
 
+    const changeMode = (mode: ToolMode) => {
+      setActiveMode(mode);
+      window.editorMode = mode; // 挂载到window，在有些情况不添加依赖时也能获取到最新值
+    };
+
     const onSelectIds = (ids: Id[]) => {
       if (propsSelectedIds != undefined && onSelect) {
         onSelect(ids);
@@ -173,7 +178,6 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
       return new Promise((resolve) => {
         if (!boxFeature) resolve(feature);
         const isOutside = !polygonContainsAllowBoundary(boxFeature, feature);
-        debugger;
         if (!isOutside) {
           resolve(feature);
         } else {
@@ -194,7 +198,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
       const clipped = bboxClip(feature, boxFeature);
       setPolygons([...polygons, clipped]);
       if (!isContinuousDraw) {
-        setActiveMode("browse");
+        changeMode("browse");
         onSelectIds([clipped.id]);
       }
       pushHistory({
@@ -209,7 +213,6 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
     };
 
     const onEditPolygon = async (id: string, coordinates: Position[][][]) => {
-      setActiveMode("browse");
       const editPoly = turf.multiPolygon(coordinates) as PolygonFeature;
       const poly = await handleOutsideBox(editPoly);
       // pushHistory({
@@ -228,6 +231,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
             }
           : p
       );
+      changeMode("browse");
       setPolygons(newPolys);
       onChange?.({
         type: "edit",
@@ -268,7 +272,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
       const newPolys = polygons.filter((item) => item.id != feature.id);
 
       setPolygons([...newPolys, ...polys]);
-      setActiveMode("browse");
+      changeMode("browse");
       onSelectIds([]);
       pushHistory({
         annotation: `clip ${feature.id}`,
@@ -407,7 +411,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
           <Toolbar
             mode={activeMode}
             tools={tools}
-            onModeChange={setActiveMode}
+            onModeChange={changeMode}
             onUndo={!disableUndo ? undo : undefined}
             onRedo={!disableRedo ? redo : undefined}
             disabledUndo={disableUndo}
@@ -416,7 +420,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
             disabledMerge={
               selectedIds.length < 2 || ["edit", "clip"].includes(activeMode)
             }
-            onClip={() => setActiveMode("clip")}
+            onClip={() => changeMode("clip")}
             disabledClip={
               selectedIds.length != 1 || ["edit"].includes(activeMode)
             }
@@ -428,7 +432,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
             disabledShake={
               !selectedIds.length || ["edit", "clip"].includes(activeMode)
             }
-            onEdit={() => setActiveMode("edit")}
+            onEdit={() => changeMode("edit")}
             disabledEdit={
               selectedIds.length != 1 || ["clip"].includes(activeMode)
             }

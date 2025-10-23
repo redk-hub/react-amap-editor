@@ -6,6 +6,13 @@ import type {
   Geometry,
 } from "geojson";
 
+declare global {
+  interface Window {
+    map: any;
+    editorMode: string;
+  }
+}
+
 // 扩展 Feature 类型，强制 id 为 string
 export type Feature<T extends Geometry> = Omit<TurfFeature<T>, "id"> & {
   id: string;

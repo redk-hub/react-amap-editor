@@ -105,7 +105,7 @@ const MapContainer: React.FC<Props> = ({
 
     const handleClick = (e: any) => {
       const id = e.target.getExtData()?.id;
-      if (!id || mode == "draw") return;
+      if (!id || window.editorMode == "draw") return;
       const polys = map.getAllOverlays("polygon");
       const clickPolys = polys.filter(
         (item) =>
@@ -190,7 +190,7 @@ const MapContainer: React.FC<Props> = ({
       }
       namesLayer.current?.clear();
     };
-  }, [map, AMap, mode, polygons, selectedIds, inactiveOnClickEmpty]);
+  }, [map, AMap, polygons, selectedIds, inactiveOnClickEmpty]);
 
   const addPolygonName = (polygons) => {
     if (!namesLayer.current) {
