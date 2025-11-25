@@ -115,7 +115,7 @@ const Toolbar: React.FC<Props> = ({
       </Tooltip>
       <Tooltip
         visible={!tools || tools?.includes("clip")}
-        title="裁切：选中要素，绘制裁切线，双击结束开始裁切"
+        title="裁切：选中要素，绘制裁切线，双击结束开始裁切,或者选中多个要素，求差集"
       >
         <IconBtn
           icon={<ScissorIcon />}

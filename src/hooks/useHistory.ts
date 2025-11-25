@@ -298,12 +298,37 @@ export default function useHistory<T = Polygon[]>(opt: Opts<T>) {
     });
   };
 
+  const getStateOperate = (stackItems, stackIndex) => {
+    // 如果基类有经纬度，当前没有经纬度，表示删除
+    // 如果基类没有经纬度，当前有经纬度，表示新增
+    // 如果基类和当前都有经纬度，表示修改
+    let operate: string = "";
+    if (
+      !stackItems[0]?.feature?.geometry &&
+      !!stackItems[stackIndex]?.feature?.geometry
+    ) {
+      operate = "add";
+    } else if (
+      !!stackItems[0]?.feature?.geometry &&
+      !!stackItems[stackIndex]?.feature?.geometry
+    ) {
+      operate = "update";
+    } else if (
+      !!stackItems[0]?.feature?.geometry &&
+      !stackItems[stackIndex]?.feature?.geometry
+    ) {
+      operate = "delete";
+    } else {
+      operate = "";
+    }
+    return operate;
+  };
+
   const getCurrentState = (): { operate: string; feature: Polygon }[] => {
     if (modifyIndex.current < 0) {
       return [];
     }
     let unSaved: { operate: string; feature: Polygon }[] = [];
-    let operate: string = "";
     [
       ...new Set(
         modifies.current
@@ -324,27 +349,8 @@ export default function useHistory<T = Polygon[]>(opt: Opts<T>) {
       if (stackIndex <= 0) {
         return;
       }
-      // 如果基类有经纬度，当前没有经纬度，表示删除
-      // 如果基类没有经纬度，当前有经纬度，表示新增
-      // 如果基类和当前都有经纬度，表示修改
-      if (
-        !stackItems[0]?.feature?.geometry &&
-        !!stackItems[stackIndex]?.feature?.geometry
-      ) {
-        operate = "add";
-      } else if (
-        !!stackItems[0]?.feature?.geometry &&
-        !!stackItems[stackIndex]?.feature?.geometry
-      ) {
-        operate = "update";
-      } else if (
-        !!stackItems[0]?.feature?.geometry &&
-        !stackItems[stackIndex]?.feature?.geometry
-      ) {
-        operate = "delete";
-      } else {
-        operate = "";
-      }
+
+      const operate = getStateOperate(stackItems, stackIndex);
 
       if (operate) {
         unSaved.push({ operate, feature: stackItems[stackIndex].feature });
@@ -352,6 +358,27 @@ export default function useHistory<T = Polygon[]>(opt: Opts<T>) {
     });
 
     return unSaved;
+  };
+
+  // TODO: 未完成
+  const getLastState = () => {
+    if (modifyIndex.current < 0) {
+      // return [];
+    }
+    const lastids = modifies.current
+      .filter((item) => !item.startsWith("temp_"))
+      .pop();
+    lastids.split("#").forEach((id) => {
+      const stack = stacks.current[id];
+      if (!stack) {
+        return;
+      }
+      const { stackItems, index: stackIndex } = stack;
+      if (stackIndex <= 0) {
+        return;
+      }
+      const operate = getStateOperate(stackItems, stackIndex);
+    });
   };
 
   const clearHistory = () => {

@@ -39,8 +39,9 @@ interface Props {
   pushHistory: (behave: Behave) => void;
   onDrawFinish: (feature: Polygon) => void;
   onEditPolygon: (id: Id, coordinates: any) => void;
-  onStartClip: (line: Feature<LineString>) => void;
+  onDrawLineClip: (line: Feature<LineString>) => void;
   onMapReady?: (map: any) => void;
+  editModeType?: "single" | "linked";
 }
 
 const MapContainer: React.FC<Props> = ({
@@ -58,8 +59,9 @@ const MapContainer: React.FC<Props> = ({
   pushHistory,
   onDrawFinish,
   onEditPolygon,
-  onStartClip,
+  onDrawLineClip,
   onMapReady,
+  editModeType,
 }) => {
   const { map, AMap } = useAmap(CONTAINER_ID, {
     amapKey,
@@ -77,7 +79,7 @@ const MapContainer: React.FC<Props> = ({
   }, [map, onMapReady]);
 
   useEffect(() => {
-    if (!map || !AMap || !boxFeature) return;
+    if (!map || !boxFeature) return;
     const poly: any = new AMap.Polygon();
     poly.setOptions({
       path: boxFeature.geometry.coordinates,
@@ -94,11 +96,13 @@ const MapContainer: React.FC<Props> = ({
     map.add(poly);
 
     return () => {
-      if (poly && map) {
-        map.remove(poly);
-      }
+      try {
+        if (poly && map) {
+          map.remove(poly);
+        }
+      } catch (error) {}
     };
-  }, [boxFeature, map, AMap]);
+  }, [boxFeature, map]);
 
   useEffect(() => {
     if (!map || !AMap) return;
@@ -107,12 +111,13 @@ const MapContainer: React.FC<Props> = ({
       const id = e.target.getExtData()?.id;
       if (!id || window.editorMode == "draw") return;
       const polys = map.getAllOverlays("polygon");
-      const clickPolys = polys.filter(
-        (item) =>
-          !item.getExtData()?.disabled &&
-          !item.getExtData()?.readonly &&
-          item.contains(e.lnglat)
+      let clickPolys = polys.filter(
+        (item) => !item.getExtData()?.disabled && item.contains(e.lnglat)
       );
+      if (!e.originEvent.shiftKey) {
+        // 非多选模式下，过滤掉只读多边形
+        clickPolys = clickPolys.filter((item) => !item.getExtData()?.readonly);
+      }
       const clickIds = clickPolys.map((item) => item.getExtData()?.id);
       if (!inactiveOnClickEmpty && clickIds.length === 0) {
         // 如果禁止点击空白处取消选择，且没有选中任何多边形，不做任何操作
@@ -120,13 +125,9 @@ const MapContainer: React.FC<Props> = ({
       }
       if (e.originEvent.shiftKey) {
         // shift + 点击实现多选
-        const existSet = new Set(selectedIds);
-        const clickSet = new Set(clickIds);
+
         // 合并两个数组，排除同时出现在两者中的元素
-        const next = [
-          ...[...existSet].filter((item) => !clickSet.has(item)),
-          ...[...clickSet].filter((item) => !existSet.has(item)),
-        ];
+        const next = [...new Set([...selectedIds, ...clickIds])];
 
         onSelectIds(next);
       } else {
@@ -243,6 +244,7 @@ const MapContainer: React.FC<Props> = ({
           selectedIds={selectedIds}
           boxFeature={boxFeature}
           onEditPolygon={onEditPolygon}
+          editModeType={editModeType}
         />
       )}
       {mode === "draw" && (
@@ -262,7 +264,7 @@ const MapContainer: React.FC<Props> = ({
           AMap={AMap}
           polygons={polygons}
           boxFeature={boxFeature}
-          onFinish={onStartClip}
+          onFinish={onDrawLineClip}
         />
       )}
     </>

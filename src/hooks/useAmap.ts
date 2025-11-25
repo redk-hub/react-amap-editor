@@ -47,7 +47,7 @@ export default function useAmap(
         });
         map.addControl(new AMapNS.Scale());
         map.addControl(new AMapNS.ToolBar());
-        (window as any).map = map;
+        window.amap = map;
 
         setMap(map);
       })

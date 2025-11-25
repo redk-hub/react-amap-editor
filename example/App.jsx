@@ -56,25 +56,6 @@ const App = () => {
       <Layout>
         <Sider width={300} style={{ background: "#fff", padding: "16px" }}>
           <Space direction="vertical" style={{ width: "100%" }}>
-            <Card title="操作面板" size="small">
-              <Space direction="vertical" style={{ width: "100%" }}>
-                <Button
-                  type="primary"
-                  onClick={handleApiRequest}
-                  loading={loading}
-                  block
-                >
-                  测试API请求
-                </Button>
-                <Button
-                  onClick={handleGeoserverRequest}
-                  loading={loading}
-                  block
-                >
-                  测试GeoServer请求
-                </Button>
-              </Space>
-            </Card>
             <Card title="日志信息" size="small">
               <Text code style={{ fontSize: "12px", wordBreak: "break-all" }}>
                 {log || "暂无日志信息"}
@@ -87,6 +68,7 @@ const App = () => {
             <AMapEditor
               amapKey="cd4c46df876318f649075037f7e27cf3"
               style={{ width: "100%", height: "100%" }}
+              center={[116.39494, 39.874846]}
               onDrawEnd={(f) =>
                 setLog("绘制完成: " + JSON.stringify(f.toGeoJSON?.()))
               }

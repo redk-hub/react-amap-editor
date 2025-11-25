@@ -8,7 +8,7 @@ import type {
 
 declare global {
   interface Window {
-    map: any; // 高德地图实例
+    amap: any; // 高德地图实例
     editorMode: string; // 编辑器当前模式
   }
 }
@@ -58,6 +58,7 @@ export interface AMapEditorProps {
   onSelect?: (ids: Id[]) => void;
   onMapReady?: (map: any) => void;
   onChange?: (e: PolygonChange) => void; // 多边形变化回调
+  onFeaturesChange?: (polygons: Polygon[]) => void; // 多边形列表变化回调
 }
 
 export type ToolMode = "browse" | "draw" | "clip" | "merge" | "edit";

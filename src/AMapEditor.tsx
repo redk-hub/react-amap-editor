@@ -72,12 +72,16 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
       onSelect,
       onMapReady,
       onChange,
+      onFeaturesChange,
     } = props;
     const bus = useEventBus();
     const [polygons, setPolygons] = useState<Feature<MultiPolygon>[]>([]);
     const [selectedIds, setSelectedIds] = useState<Id[]>([]);
     const [activeMode, setActiveMode] = useState<ToolMode>("browse");
     const [map, setMap] = useState<any>(null);
+    const [editModeType, setEditModeType] = useState<"single" | "linked">(
+      "single"
+    );
 
     const {
       pushHistory,
@@ -145,10 +149,11 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
           .filter((item) => !!item && !item.id.includes("temp"));
         const oldIds = new Set(oldVals.map((v) => v.id));
         if (oldVals.length === 0 && newVals.length === 0) return;
-        setPolygons((pre) => {
-          const list = pre.filter((item) => !oldIds.has(item.id));
-          return [...list, ...newVals];
-        });
+
+        onChangeFeatures([
+          ...polygons.filter((item) => !oldIds.has(item.id)),
+          ...newVals,
+        ]);
       };
       bus.on("history:undo", handleUndoOrRedo);
       bus.on("history:redo", handleUndoOrRedo);
@@ -169,6 +174,14 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
         onSelect(ids);
       } else {
         setSelectedIds(ids);
+      }
+    };
+
+    const onChangeFeatures = (newfeatures: PolygonFeature[]) => {
+      if (features && !!onFeaturesChange) {
+        onFeaturesChange(newfeatures);
+      } else {
+        setPolygons(newfeatures);
       }
     };
 
@@ -197,7 +210,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
 
     const onDrawFinish = (feature: PolygonFeature) => {
       const clipped = bboxClip(feature, boxFeature);
-      setPolygons([...polygons, clipped]);
+      onChangeFeatures([...polygons, clipped]);
       if (!isContinuousDraw) {
         changeMode("browse");
         onSelectIds([clipped.id]);
@@ -233,7 +246,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
           : p
       );
       changeMode("browse");
-      setPolygons(newPolys);
+      onChangeFeatures(newPolys);
       onChange?.({
         type: "edit",
         beforeChanges: polygons.filter((item) => item.id == id),
@@ -257,11 +270,11 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
           .filter((p) => selectedIds.includes(p.id))
           .map((item) => ({ ...item, geometry: null })),
       });
-      setPolygons((prev) => prev.filter((p) => !selectedIds.includes(p.id)));
+      onChangeFeatures(polygons.filter((p) => !selectedIds.includes(p.id)));
       onSelectIds([]);
     };
 
-    const onStartClip = (line: Feature<LineString>) => {
+    const onDrawLineClip = (line: Feature<LineString>) => {
       const feature = polygons.find((p) => selectedIds.includes(p.id));
       if (!feature) return;
       pushHistory({
@@ -272,7 +285,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
       const polys = splitMultiPolygonByLine(feature, line);
       const newPolys = polygons.filter((item) => item.id != feature.id);
 
-      setPolygons([...newPolys, ...polys]);
+      onChangeFeatures([...newPolys, ...polys]);
       changeMode("browse");
       onSelectIds([]);
       pushHistory({
@@ -312,7 +325,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
         const next = polygons.filter((p) => !selectedIds.includes(p.id));
 
         next.push(cleaned);
-        setPolygons(next);
+        onChangeFeatures(next);
         pushHistory({
           annotation: `add base merge ${selectedIds.join(",")}`,
           features: selectedPolygons,
@@ -325,36 +338,34 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
             cleaned,
           ],
         });
-        onSelectIds([]);
+        onSelectIds([cleaned.id]);
       }
     };
 
     const onImport = (imported) => {
-      setPolygons((prev) => {
-        const existingIds = new Set(prev.map((p) => p.id));
-        const next = [...prev];
-        const assignedIds: Id[] = [];
+      const existingIds = new Set(polygons.map((p) => p.id));
+      const next = [...polygons];
+      const assignedIds: Id[] = [];
 
-        // 使用批量处理优化性能
-        const batchSize = 1000;
-        for (let i = 0; i < imported.length; i += batchSize) {
-          const batch = imported.slice(i, i + batchSize);
-          for (const imp of batch) {
-            let id = imp.id;
-            if (existingIds.has(id) || !id) {
-              id = String(Date.now()) + Math.random().toString(36).slice(2);
-            }
-            existingIds.add(id);
-            next.push({ ...imp, id });
-            assignedIds.push(id);
+      // 使用批量处理优化性能
+      const batchSize = 1000;
+      for (let i = 0; i < imported.length; i += batchSize) {
+        const batch = imported.slice(i, i + batchSize);
+        for (const imp of batch) {
+          let id = imp.id;
+          if (existingIds.has(id) || !id) {
+            id = String(Date.now()) + Math.random().toString(36).slice(2);
           }
+          existingIds.add(id);
+          next.push({ ...imp, id });
+          assignedIds.push(id);
         }
+      }
 
-        // select imported items
-        onSelectIds(assignedIds);
+      // select imported items
+      onSelectIds(assignedIds);
 
-        return next;
-      });
+      onChangeFeatures(next);
     };
 
     // 摇一摇功能
@@ -381,14 +392,14 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
             features: [polygon],
             isBase: true,
           });
-          setPolygons((pre) => {
-            return pre.map((item) => {
+          onChangeFeatures(
+            polygons.map((item) => {
               if (item.id === polygon.id) {
                 return shakenPolygon;
               }
               return item;
-            });
-          });
+            })
+          );
           pushHistory({
             annotation: `摇一摇 ${shakenPolygon.id}`,
             features: [shakenPolygon],
@@ -400,6 +411,44 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
     const onMapLoaded = (map) => {
       setMap(map);
       onMapReady?.(map);
+    };
+
+    const onClipModeClick = () => {
+      if (selectedIds.length > 1) {
+        // 求差集
+        const polys = selectedIds
+          .map((id) => polygons.find((p) => p.id === id))
+          .filter((p) => !!p);
+        pushHistory({
+          annotation: `add base clip ${polys[0].id}}`,
+          features: [polys[0]],
+          isBase: true,
+        });
+        const diff = turf.difference(turf.featureCollection(polys));
+        const newFeature: PolygonFeature = {
+          ...polys[0],
+          geometry: diff.geometry as MultiPolygon,
+        };
+
+        onChangeFeatures(
+          polygons.map((item) => {
+            return item.id === selectedIds[0] ? newFeature : item;
+          })
+        );
+        changeMode("browse");
+        onSelectIds([newFeature.id]);
+        pushHistory({
+          annotation: `clip ${selectedIds[0]}`,
+          features: [newFeature],
+        });
+        onChange?.({
+          type: "clip",
+          beforeChanges: [polys[0]],
+          afterChanges: [newFeature],
+        });
+      } else {
+        changeMode("clip");
+      }
     };
 
     return (
@@ -422,9 +471,9 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
             disabledMerge={
               selectedIds.length < 2 || ["edit", "clip"].includes(activeMode)
             }
-            onClip={() => changeMode("clip")}
+            onClip={onClipModeClick}
             disabledClip={
-              selectedIds.length != 1 || ["edit"].includes(activeMode)
+              selectedIds.length < 1 || ["edit"].includes(activeMode)
             }
             onDelete={onDelete}
             disabledDelete={
@@ -439,6 +488,30 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
               selectedIds.length != 1 || ["clip"].includes(activeMode)
             }
           />
+          {/* {activeMode === "edit" && (
+            <div style={{ marginLeft: 16 }}>
+              <label style={{ marginRight: 8 }}>
+                <input
+                  type="radio"
+                  name="editModeType"
+                  value="single"
+                  checked={editModeType === "single"}
+                  onChange={() => setEditModeType("single")}
+                />
+                单独编辑
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="editModeType"
+                  value="linked"
+                  checked={editModeType === "linked"}
+                  onChange={() => setEditModeType("linked")}
+                />
+                联动编辑
+              </label>
+            </div>
+          )} */}
           <div className="editor-batch-wrap">
             {(!tools || tools?.includes("import")) && (
               <ImportButton onImport={onImport} />
@@ -462,9 +535,10 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
           onDrawFinish={onDrawFinish}
           onEditPolygon={onEditPolygon}
           pushHistory={pushHistory}
-          onStartClip={onStartClip}
+          onDrawLineClip={onDrawLineClip}
           onSelectIds={onSelectIds}
           onMapReady={onMapLoaded}
+          editModeType={editModeType}
         />
       </div>
     );
