@@ -1,5 +1,5 @@
 // src/hooks/useAmap.ts
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import AMapLoader from "@amap/amap-jsapi-loader";
 import { Position } from "geojson";
 
@@ -10,10 +10,28 @@ export default function useAmap(
     center,
     zoom,
     mapStyle,
-  }: { amapKey: string; center?: Position; zoom?: number; mapStyle?: string }
+  }: { amapKey: string; center?: Position; zoom?: number; mapStyle?: string },
 ) {
   const [map, setMap] = useState<AMap.Map | null>(null);
   const amapRef = useRef<typeof AMap | null>(null);
+  const [satelliteVisible, setSatelliteVisible] = useState(false);
+  const satelliteLayerRef = useRef<any>(null);
+
+  const toggleSatellite = useCallback(() => {
+    if (!map || !amapRef.current) return;
+    if (satelliteVisible) {
+      if (satelliteLayerRef.current) {
+        map.remove(satelliteLayerRef.current);
+        satelliteLayerRef.current = null;
+      }
+      setSatelliteVisible(false);
+    } else {
+      const layer = new window.AMap.TileLayer.Satellite();
+      map.add(layer);
+      satelliteLayerRef.current = layer;
+      setSatelliteVisible(true);
+    }
+  }, [map, satelliteVisible]);
 
   useEffect(() => {
     let disposed = false;
@@ -32,6 +50,7 @@ export default function useAmap(
         "AMap.ToolBar",
         "AMap.PolygonEditor",
         "AMap.MouseTool",
+        "AMap.Satellite",
       ],
     })
       .then((AMapNS) => {
@@ -61,5 +80,5 @@ export default function useAmap(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [containerId, amapKey, center, zoom, mapStyle]);
 
-  return { map, AMap: amapRef.current };
+  return { map, AMap: amapRef.current, satelliteVisible, toggleSatellite };
 }

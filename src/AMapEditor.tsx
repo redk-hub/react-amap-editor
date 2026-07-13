@@ -80,7 +80,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
     const [activeMode, setActiveMode] = useState<ToolMode>("browse");
     const [map, setMap] = useState<any>(null);
     const [editModeType, setEditModeType] = useState<"single" | "linked">(
-      "single"
+      "single",
     );
 
     const {
@@ -187,7 +187,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
 
     // 如果boxFeature存在，且当前多边形超出边界，提示是否进行裁切
     const handleOutsideBox = (
-      feature: PolygonFeature
+      feature: PolygonFeature,
     ): Promise<PolygonFeature> => {
       return new Promise((resolve) => {
         if (!boxFeature) resolve(feature);
@@ -229,11 +229,11 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
     const onEditPolygon = async (id: string, coordinates: Position[][][]) => {
       const editPoly = turf.multiPolygon(coordinates) as PolygonFeature;
       const poly = await handleOutsideBox(editPoly);
-      // pushHistory({
-      //   features: polygons.filter((item) => item.id == id),
-      //   annotation: "add base",
-      //   isBase: true,
-      // });
+      pushHistory({
+        features: polygons.filter((item) => item.id == id),
+        annotation: "add base",
+        isBase: true,
+      });
       const newPolys = polygons.map((p) =>
         p.id === id
           ? {
@@ -243,7 +243,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
                 coordinates: poly.geometry.coordinates,
               },
             }
-          : p
+          : p,
       );
       changeMode("browse");
       onChangeFeatures(newPolys);
@@ -252,10 +252,10 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
         beforeChanges: polygons.filter((item) => item.id == id),
         afterChanges: newPolys.filter((item) => item.id == id),
       });
-      // pushHistory({
-      //   annotation: `edit ${id}`,
-      //   features: newPolys.filter((p) => p.id == id),
-      // });
+      pushHistory({
+        annotation: `edit ${id}`,
+        features: newPolys.filter((p) => p.id == id),
+      });
     };
 
     const onDelete = () => {
@@ -373,7 +373,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
       if (!map || selectedIds.length === 0) return;
 
       const selectedPolygons = polygons.filter((p) =>
-        selectedIds.includes(p.id)
+        selectedIds.includes(p.id),
       );
       if (selectedPolygons.length === 0) return;
 
@@ -384,7 +384,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
           map,
           polygon,
           polygons.filter((item) => item.id != polygon.id),
-          20
+          20,
         ).then((shakenPolygon) => {
           if (!shakenPolygon) return;
           pushHistory({
@@ -398,7 +398,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
                 return shakenPolygon;
               }
               return item;
-            })
+            }),
           );
           pushHistory({
             annotation: `摇一摇 ${shakenPolygon.id}`,
@@ -433,7 +433,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
         onChangeFeatures(
           polygons.map((item) => {
             return item.id === selectedIds[0] ? newFeature : item;
-          })
+          }),
         );
         changeMode("browse");
         onSelectIds([newFeature.id]);
@@ -542,7 +542,7 @@ const AMapEditorContentWithRef = forwardRef<AMapEditorRef, AMapEditorProps>(
         />
       </div>
     );
-  }
+  },
 );
 
 export default AMapEditor;
